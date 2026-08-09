@@ -1,8 +1,8 @@
 {
-  "name": "Pingu",
-  "nameEn": "Pingu",
-  "mainImgUrl": "https://gh-proxy.org/https://github.com/temporariness/s2theme/blob/main/13_pingu/main.jpg",
-  "subImgUrl": "https://gh-proxy.org/https://github.com/temporariness/s2theme/blob/main/13_pingu/sl.png",
-  "themeData": "https://gh-proxy.org/https://github.com/temporariness/s2theme/blob/main/13_pingu/theme.bin"
+  "mainImgUrl": "https://s2dw.ks3-cn-shanghai.ksyuncs.com/v1/my/main.jpg",
+  "name": "PINGU",
+  "nameEn": "PINGU",
+  "subImgUrl": "https://s2dw.ks3-cn-shanghai.ksyuncs.com/v1/my/sl.png",
   "themeCfg": "10,291,10,266,3,15,10,234,3,164,0,0,0,0,18",
+  "themeData": "https://s2dw.ks3-cn-shanghai.ksyuncs.com/v1/my/theme.bin"
 }

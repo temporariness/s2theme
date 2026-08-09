@@ -255,8 +255,8 @@
     },
     {
         "id": "13",
-        "name": "Pingu",
-        "nameEn": "Pingu",
+        "name": "PINGU",
+        "nameEn": "PINGU",
         "detail": "时间 天气 温度 日期 星期",
         "detailEn": "time, weather, temperature, date, week",
         "mainImgUrl": "https://gh-proxy.org/https://github.com/temporariness/s2theme/blob/main/13_pingu/main.jpg",
