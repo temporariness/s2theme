@@ -1,845 +1,965 @@
 <!doctype html>
 <html lang="zh-CN">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>S2 主题包编辑器</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --page: #f3f5f3;
-      --surface: #ffffff;
-      --surface-strong: #171b19;
-      --text: #1b211e;
-      --muted: #66706a;
-      --border: #d9dfdb;
-      --border-strong: #b9c2bc;
-      --primary: #176b52;
-      --primary-hover: #105640;
-      --primary-soft: #e5f1ec;
-      --warning: #9a5b10;
-      --danger: #a13a32;
-      --focus: #2d8f71;
-      --shadow: 0 12px 32px rgba(24, 34, 29, 0.08);
-    }
+     
+    <meta charset="utf-8">
+     
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>S2 主题包编辑器</title>
+      <style>
+        :root {
+            color-scheme: light;
+            --page: #f3f5f3;
+            --surface: #ffffff;
+            --surface-strong: #171b19;
+            --text: #1b211e;
+            --muted: #66706a;
+            --border: #d9dfdb;
+            --border-strong: #b9c2bc;
+            --primary: #176b52;
+            --primary-hover: #105640;
+            --primary-soft: #e5f1ec;
+            --warning: #9a5b10;
+            --danger: #a13a32;
+            --focus: #2d8f71;
+            --shadow: 0 12px 32px rgba(24, 34, 29, 0.08);
+        }
 
-    * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
-    body {
-      margin: 0;
-      min-width: 320px;
-      background: var(--page);
-      color: var(--text);
-      font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
-      font-size: 14px;
-      letter-spacing: 0;
-    }
+        body {
+            margin: 0;
+            min-width: 320px;
+            background: var(--page);
+            color: var(--text);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+            letter-spacing: 0;
+        }
 
-    button, input, select { font: inherit; }
+        button,
+        input,
+        select {
+            font: inherit;
+        }
 
-    button, .file-button {
-      min-height: 38px;
-      border: 1px solid var(--border-strong);
-      border-radius: 6px;
-      background: var(--surface);
-      color: var(--text);
-      padding: 8px 13px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      line-height: 1.2;
-      text-decoration: none;
-      white-space: nowrap;
-    }
+        button,
+        .file-button {
+            min-height: 38px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            padding: 8px 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            line-height: 1.2;
+            text-decoration: none;
+            white-space: nowrap;
+        }
 
-    button:hover:not(:disabled), .file-button:hover { border-color: var(--primary); }
-    button:focus-visible, input:focus-visible, select:focus-visible, .file-button:focus-within {
-      outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
-      outline-offset: 2px;
-    }
+        button:hover:not(:disabled),
+        .file-button:hover {
+            border-color: var(--primary);
+        }
 
-    button:disabled { cursor: not-allowed; opacity: 0.45; }
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        .file-button:focus-within {
+            outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+            outline-offset: 2px;
+        }
 
-    .primary-button {
-      border-color: var(--primary);
-      background: var(--primary);
-      color: #ffffff;
-    }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
 
-    .primary-button:hover:not(:disabled) {
-      border-color: var(--primary-hover);
-      background: var(--primary-hover);
-    }
+        .primary-button {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #ffffff;
+        }
 
-    .ghost-button { background: transparent; }
+        .primary-button:hover:not(:disabled) {
+            border-color: var(--primary-hover);
+            background: var(--primary-hover);
+        }
 
-    .file-button input {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
-    }
+        .ghost-button {
+            background: transparent;
+        }
 
-    .app-header {
-      min-height: 72px;
-      padding: 14px clamp(16px, 3vw, 38px);
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-    }
+        .file-button input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
 
-    .brand {
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+        .app-header {
+            min-height: 72px;
+            padding: 14px clamp(16px, 3vw, 38px);
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
 
-    .brand-mark {
-      width: 38px;
-      height: 38px;
-      flex: 0 0 38px;
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-      background: var(--surface-strong);
-      color: #ffffff;
-      font-weight: 600;
-    }
+        .brand {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    h1, h2, p { margin: 0; }
-    h1 { font-size: 18px; font-weight: 600; }
-    h2 { font-size: 15px; font-weight: 600; }
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            background: var(--surface-strong);
+            color: #ffffff;
+            font-weight: 600;
+        }
 
-    .file-name {
-      margin-top: 3px;
-      max-width: min(52vw, 560px);
-      color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+        h1,
+        h2,
+        p {
+            margin: 0;
+        }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 0 0 auto;
-    }
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
 
-    .workspace {
-      width: min(1180px, 100%);
-      margin: 0 auto;
-      padding: clamp(18px, 3vw, 34px);
-      display: grid;
-      grid-template-columns: minmax(360px, 1fr) minmax(300px, 390px);
-      gap: clamp(22px, 4vw, 48px);
-      align-items: start;
-    }
+        h2 {
+            font-size: 15px;
+            font-weight: 600;
+        }
 
-    .preview-column { min-width: 0; }
+        .file-name {
+            margin-top: 3px;
+            max-width: min(52vw, 560px);
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-    .section-heading {
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 12px;
-    }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+        }
 
-    .status-badge {
-      border-radius: 999px;
-      background: var(--primary-soft);
-      color: var(--primary);
-      padding: 5px 9px;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
+        .workspace {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            padding: clamp(18px, 3vw, 34px);
+            display: grid;
+            grid-template-columns: minmax(360px, 1fr) minmax(300px, 390px);
+            gap: clamp(22px, 4vw, 48px);
+            align-items: start;
+        }
 
-    .status-badge.is-idle {
-      background: #ecefed;
-      color: var(--muted);
-    }
+        .preview-column {
+            min-width: 0;
+        }
 
-    .preview-shell {
-      min-height: 520px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      display: grid;
-      place-items: center;
-      padding: clamp(18px, 4vw, 34px);
-    }
+        .section-heading {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
 
-    .canvas-frame {
-      position: relative;
-      width: min(100%, 360px);
-      aspect-ratio: 3 / 4;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #000000;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
-      user-select: none;
-      touch-action: none;
-    }
+        .status-badge {
+            border-radius: 999px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
 
-    .canvas-frame canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: grab;
-    }
+        .status-badge.is-idle {
+            background: #ecefed;
+            color: var(--muted);
+        }
 
-    .canvas-frame canvas.is-dragging { cursor: grabbing; }
+        .preview-shell {
+            min-height: 520px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            display: grid;
+            place-items: center;
+            padding: clamp(18px, 4vw, 34px);
+        }
 
-    .empty-state {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      color: #9ba29e;
-      background: #0e1110;
-      pointer-events: none;
-    }
+        .canvas-frame {
+            position: relative;
+            width: min(100%, 360px);
+            aspect-ratio: 3 / 4;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #000000;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            touch-action: none;
+        }
 
-    .empty-state[hidden] { display: none; }
+        .canvas-frame canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
 
-    .preview-footer {
-      margin-top: 12px;
-      min-height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      color: var(--muted);
-      font-size: 12px;
-    }
+        .canvas-frame canvas.is-dragging {
+            cursor: grabbing;
+        }
 
-    .control-column {
-      min-width: 0;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: #9ba29e;
+            background: #0e1110;
+            pointer-events: none;
+        }
 
-    .control-section { padding: 20px; }
-    .control-section + .control-section { border-top: 1px solid var(--border); }
-    .control-section h2 { margin-bottom: 14px; }
+        .empty-state[hidden] {
+            display: none;
+        }
 
-    .action-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+        .preview-footer {
+            margin-top: 12px;
+            min-height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            color: var(--muted);
+            font-size: 12px;
+        }
 
-    .segmented {
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      border: 1px solid var(--border-strong);
-      border-radius: 6px;
-      overflow: hidden;
-    }
+        .control-column {
+            min-width: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
 
-    .segmented button {
-      min-width: 0;
-      border: 0;
-      border-radius: 0;
-      background: var(--surface);
-      padding-inline: 8px;
-    }
+        .control-section {
+            padding: 20px;
+        }
 
-    .segmented button + button { border-left: 1px solid var(--border-strong); }
-    .segmented button[aria-pressed="true"] { background: var(--surface-strong); color: #ffffff; }
+        .control-section+.control-section {
+            border-top: 1px solid var(--border);
+        }
 
-    .field { display: grid; gap: 7px; }
-    .field + .field { margin-top: 15px; }
+        .control-section h2 {
+            margin-bottom: 14px;
+        }
 
-    .field-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--muted);
-    }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
 
-    .field-label output { color: var(--text); font-variant-numeric: tabular-nums; }
+        .segmented {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            overflow: hidden;
+        }
 
-    input[type="range"] {
-      width: 100%;
-      margin: 0;
-      accent-color: var(--primary);
-    }
+        .segmented button {
+            min-width: 0;
+            border: 0;
+            border-radius: 0;
+            background: var(--surface);
+            padding-inline: 8px;
+        }
 
-    input[type="color"] {
-      width: 44px;
-      height: 34px;
-      padding: 3px;
-      border: 1px solid var(--border-strong);
-      border-radius: 6px;
-      background: var(--surface);
-      cursor: pointer;
-    }
+        .segmented button+button {
+            border-left: 1px solid var(--border-strong);
+        }
 
-    input[type="text"] {
-      width: 100%;
-      height: 38px;
-      border: 1px solid var(--border-strong);
-      border-radius: 6px;
-      padding: 8px 10px;
-      background: var(--surface);
-      color: var(--text);
-    }
+        .segmented button[aria-pressed="true"] {
+            background: var(--surface-strong);
+            color: #ffffff;
+        }
 
-    .color-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
+        .field {
+            display: grid;
+            gap: 7px;
+        }
 
-    .metadata {
-      margin: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px 16px;
-      font-size: 13px;
-    }
+        .field+.field {
+            margin-top: 15px;
+        }
 
-    .metadata dt { color: var(--muted); }
-    .metadata dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+        .field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+        }
 
-    .message {
-      min-height: 20px;
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 12px;
-    }
+        .field-label output {
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
 
-    .message.is-error { color: var(--danger); }
-    .message.is-warning { color: var(--warning); }
+        input[type="range"] {
+            width: 100%;
+            margin: 0;
+            accent-color: var(--primary);
+        }
 
-    @media (max-width: 820px) {
-      .app-header { align-items: flex-start; }
-      .workspace { grid-template-columns: 1fr; }
-      .preview-shell { min-height: 0; }
-      .canvas-frame { width: min(100%, 320px); }
-    }
+        input[type="color"] {
+            width: 44px;
+            height: 34px;
+            padding: 3px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            background: var(--surface);
+            cursor: pointer;
+        }
 
-    @media (max-width: 560px) {
-      .app-header { flex-direction: column; }
-      .header-actions { width: 100%; }
-      .header-actions > * { flex: 1 1 0; }
-      .file-name { max-width: calc(100vw - 86px); }
-      .workspace { padding: 14px; gap: 18px; }
-      .preview-shell { padding: 16px; }
-      .control-section { padding: 17px; }
-      .preview-footer { align-items: flex-start; flex-direction: column; gap: 4px; }
-    }
-  </style>
+        input[type="text"] {
+            width: 100%;
+            height: 38px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 8px 10px;
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .metadata {
+            margin: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px 16px;
+            font-size: 13px;
+        }
+
+        .metadata dt {
+            color: var(--muted);
+        }
+
+        .metadata dd {
+            margin: 0;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .message {
+            min-height: 20px;
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .message.is-error {
+            color: var(--danger);
+        }
+
+        .message.is-warning {
+            color: var(--warning);
+        }
+
+        @media (max-width: 820px) {
+            .app-header {
+                align-items: flex-start;
+            }
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-shell {
+                min-height: 0;
+            }
+
+            .canvas-frame {
+                width: min(100%, 320px);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .app-header {
+                flex-direction: column;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions>* {
+                flex: 1 1 0;
+            }
+
+            .file-name {
+                max-width: calc(100vw - 86px);
+            }
+
+            .workspace {
+                padding: 14px;
+                gap: 18px;
+            }
+
+            .preview-shell {
+                padding: 16px;
+            }
+
+            .control-section {
+                padding: 17px;
+            }
+
+            .preview-footer {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <header class="app-header">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">S2</div>
-      <div>
-        <h1>主题包编辑器</h1>
-        <p class="file-name" id="themeFileName">未载入主题包</p>
-      </div>
-    </div>
-    <div class="header-actions">
-      <label class="file-button">
-        打开 BIN
-        <input id="themeInput" type="file" accept=".bin,application/octet-stream">
-      </label>
-      <button class="primary-button" id="packButton" type="button" disabled>打包 BIN</button>
-    </div>
-  </header>
+      <header class="app-header">
+            <div class="brand">
+                  <div class="brand-mark" aria-hidden="true">S2</div>
+                  <div>
+                        <h1>主题包编辑器</h1>
+                        <p class="file-name" id="themeFileName">未载入主题包</p>
+                      </div>
+                </div>
+            <div class="header-actions">
+                  <label class="file-button">
+                        打开 BIN
+                        <input id="themeInput" type="file" accept=".bin,application/octet-stream">
+                      </label>
+                  <button class="primary-button" id="packButton" type="button" disabled>打包 BIN</button>
+                </div>
+          </header>
 
-  <main class="workspace">
-    <section class="preview-column" aria-labelledby="previewTitle">
-      <div class="section-heading">
-        <h2 id="previewTitle">画面预览</h2>
-        <span class="status-badge is-idle" id="statusBadge">未载入</span>
-      </div>
-      <div class="preview-shell">
-        <div class="canvas-frame" id="canvasFrame">
-          <canvas id="previewCanvas" width="240" height="320" aria-label="240乘320主题图片预览"></canvas>
-          <div class="empty-state" id="emptyState">未载入主题</div>
-        </div>
-      </div>
-      <div class="preview-footer">
-        <span>240 × 320 · RGB565 LE</span>
-        <span id="pixelPosition">X 0 · Y 0</span>
-      </div>
-    </section>
+      <main class="workspace">
+            <section class="preview-column" aria-labelledby="previewTitle">
+                  <div class="section-heading">
+                        <h2 id="previewTitle">画面预览</h2>
+                        <span class="status-badge is-idle" id="statusBadge">未载入</span>
+                      </div>
+                  <div class="preview-shell">
+                        <div class="canvas-frame" id="canvasFrame">
+                              <canvas id="previewCanvas" width="240" height="320" aria-label="240乘320主题图片预览"></canvas>
+                              <div class="empty-state" id="emptyState">未载入主题</div>
+                            </div>
+                      </div>
+                  <div class="preview-footer">
+                        <span>240 × 320 · RGB565 LE</span>
+                        <span id="pixelPosition">X 0 · Y 0</span>
+                      </div>
+                </section>
 
-    <aside class="control-column" aria-label="主题编辑控件">
-      <section class="control-section">
-        <h2>图片</h2>
-        <div class="action-row">
-          <label class="file-button">
-            替换图片
-            <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp">
-          </label>
-          <button id="restoreButton" type="button" disabled>恢复原图</button>
-          <button id="pngButton" type="button" disabled>导出 PNG</button>
-        </div>
-      </section>
+            <aside class="control-column" aria-label="主题编辑控件">
+                  <section class="control-section">
+                        <h2>图片</h2>
+                        <div class="action-row">
+                              <label class="file-button">
+                                    替换图片
+                                    <input id="imageInput" type="file"
+                            accept="image/png,image/jpeg,image/webp,image/bmp">
+                                  </label>
+                              <button id="restoreButton" type="button" disabled>恢复原图</button>
+                              <button id="pngButton" type="button" disabled>导出 PNG</button>
+                            </div>
+                      </section>
 
-      <section class="control-section">
-        <h2>画面调整</h2>
-        <div class="field">
-          <span class="field-label">适配方式</span>
-          <div class="segmented" role="group" aria-label="图片适配方式">
-            <button type="button" data-fit="cover" aria-pressed="true">填充</button>
-            <button type="button" data-fit="contain" aria-pressed="false">适应</button>
-            <button type="button" data-fit="stretch" aria-pressed="false">拉伸</button>
-          </div>
-        </div>
+                  <section class="control-section">
+                        <h2>画面调整</h2>
+                        <div class="field">
+                              <span class="field-label">适配方式</span>
+                              <div class="segmented" role="group" aria-label="图片适配方式">
+                                    <button type="button" data-fit="cover" aria-pressed="true">填充</button>
+                                    <button type="button" data-fit="contain" aria-pressed="false">适应</button>
+                                    <button type="button" data-fit="stretch" aria-pressed="false">拉伸</button>
+                                  </div>
+                            </div>
 
-        <label class="field">
-          <span class="field-label">缩放 <output id="zoomValue">100%</output></span>
-          <input id="zoomRange" type="range" min="50" max="250" value="100" step="1">
-        </label>
+                        <label class="field">
+                              <span class="field-label">缩放 <output id="zoomValue">100%</output></span>
+                              <input id="zoomRange" type="range" min="50" max="250" value="100" step="1">
+                            </label>
 
-        <label class="field">
-          <span class="field-label">水平位置 <output id="offsetXValue">0 px</output></span>
-          <input id="offsetXRange" type="range" min="-240" max="240" value="0" step="1">
-        </label>
+                        <label class="field">
+                              <span class="field-label">水平位置 <output id="offsetXValue">0 px</output></span>
+                              <input id="offsetXRange" type="range" min="-240" max="240" value="0" step="1">
+                            </label>
 
-        <label class="field">
-          <span class="field-label">垂直位置 <output id="offsetYValue">0 px</output></span>
-          <input id="offsetYRange" type="range" min="-320" max="320" value="0" step="1">
-        </label>
+                        <label class="field">
+                              <span class="field-label">垂直位置 <output id="offsetYValue">0 px</output></span>
+                              <input id="offsetYRange" type="range" min="-320" max="320" value="0" step="1">
+                            </label>
 
-        <div class="field color-row">
-          <label for="backgroundColor">画布底色</label>
-          <input id="backgroundColor" type="color" value="#000000">
-        </div>
+                        <div class="field color-row">
+                              <label for="backgroundColor">画布底色</label>
+                              <input id="backgroundColor" type="color" value="#000000">
+                            </div>
 
-        <div class="action-row" style="margin-top: 16px;">
-          <button class="ghost-button" id="resetPositionButton" type="button">重置位置</button>
-        </div>
-      </section>
+                        <div class="action-row" style="margin-top: 16px;">
+                              <button class="ghost-button" id="resetPositionButton" type="button">重置位置</button>
+                            </div>
+                      </section>
 
-      <section class="control-section">
-        <h2>包信息</h2>
-        <dl class="metadata">
-          <dt>设备字段</dt><dd id="headerValue">—</dd>
-          <dt>原始数据</dt><dd id="rawSize">—</dd>
-          <dt>压缩数据</dt><dd id="packedSize">—</dd>
-          <dt>保留字段</dt><dd id="reservedValue">—</dd>
-        </dl>
-      </section>
+                  <section class="control-section">
+                        <h2>包信息</h2>
+                        <dl class="metadata">
+                              <dt>设备字段</dt>
+                    <dd id="headerValue">—</dd>
+                              <dt>原始数据</dt>
+                    <dd id="rawSize">—</dd>
+                              <dt>压缩数据</dt>
+                    <dd id="packedSize">—</dd>
+                              <dt>保留字段</dt>
+                    <dd id="reservedValue">—</dd>
+                           
+                </dl>
+                      </section>
 
-      <section class="control-section">
-        <label class="field" for="outputName">
-          <span class="field-label">输出文件名</span>
-          <input id="outputName" type="text" value="theme_new.bin" spellcheck="false">
-        </label>
-        <p class="message" id="message" role="status" aria-live="polite"></p>
-      </section>
-    </aside>
-  </main>
+                  <section class="control-section">
+                        <label class="field" for="outputName">
+                              <span class="field-label">输出文件名</span>
+                              <input id="outputName" type="text" value="theme_new.bin" spellcheck="false">
+                            </label>
+                        <p class="message" id="message" role="status" aria-live="polite"></p>
+                      </section>
+                </aside>
+          </main>
 
-  <script>
-    (() => {
-      'use strict';
+     
+    <script>
+        (() => {
+            'use strict';
 
-      const WIDTH = 240;
-      const HEIGHT = 320;
-      const RAW_LENGTH = WIDTH * HEIGHT * 2;
-      const HEADER_LENGTH = 16;
+            const WIDTH = 240;
+            const HEIGHT = 320;
+            const RAW_LENGTH = WIDTH * HEIGHT * 2;
+            const HEADER_LENGTH = 16;
 
-      const elements = {
-        themeInput: document.getElementById('themeInput'),
-        imageInput: document.getElementById('imageInput'),
-        themeFileName: document.getElementById('themeFileName'),
-        packButton: document.getElementById('packButton'),
-        restoreButton: document.getElementById('restoreButton'),
-        pngButton: document.getElementById('pngButton'),
-        previewCanvas: document.getElementById('previewCanvas'),
-        canvasFrame: document.getElementById('canvasFrame'),
-        emptyState: document.getElementById('emptyState'),
-        statusBadge: document.getElementById('statusBadge'),
-        pixelPosition: document.getElementById('pixelPosition'),
-        zoomRange: document.getElementById('zoomRange'),
-        zoomValue: document.getElementById('zoomValue'),
-        offsetXRange: document.getElementById('offsetXRange'),
-        offsetXValue: document.getElementById('offsetXValue'),
-        offsetYRange: document.getElementById('offsetYRange'),
-        offsetYValue: document.getElementById('offsetYValue'),
-        backgroundColor: document.getElementById('backgroundColor'),
-        resetPositionButton: document.getElementById('resetPositionButton'),
-        headerValue: document.getElementById('headerValue'),
-        rawSize: document.getElementById('rawSize'),
-        packedSize: document.getElementById('packedSize'),
-        reservedValue: document.getElementById('reservedValue'),
-        outputName: document.getElementById('outputName'),
-        message: document.getElementById('message'),
-        fitButtons: Array.from(document.querySelectorAll('[data-fit]'))
-      };
+            const elements = {
+                themeInput: document.getElementById('themeInput'),
+                imageInput: document.getElementById('imageInput'),
+                themeFileName: document.getElementById('themeFileName'),
+                packButton: document.getElementById('packButton'),
+                restoreButton: document.getElementById('restoreButton'),
+                pngButton: document.getElementById('pngButton'),
+                previewCanvas: document.getElementById('previewCanvas'),
+                canvasFrame: document.getElementById('canvasFrame'),
+                emptyState: document.getElementById('emptyState'),
+                statusBadge: document.getElementById('statusBadge'),
+                pixelPosition: document.getElementById('pixelPosition'),
+                zoomRange: document.getElementById('zoomRange'),
+                zoomValue: document.getElementById('zoomValue'),
+                offsetXRange: document.getElementById('offsetXRange'),
+                offsetXValue: document.getElementById('offsetXValue'),
+                offsetYRange: document.getElementById('offsetYRange'),
+                offsetYValue: document.getElementById('offsetYValue'),
+                backgroundColor: document.getElementById('backgroundColor'),
+                resetPositionButton: document.getElementById('resetPositionButton'),
+                headerValue: document.getElementById('headerValue'),
+                rawSize: document.getElementById('rawSize'),
+                packedSize: document.getElementById('packedSize'),
+                reservedValue: document.getElementById('reservedValue'),
+                outputName: document.getElementById('outputName'),
+                message: document.getElementById('message'),
+                fitButtons: Array.from(document.querySelectorAll('[data-fit]'))
+            };
 
-      const context = elements.previewCanvas.getContext('2d', { alpha: false, willReadFrequently: true });
-      const state = {
-        header: null,
-        originalCanvas: null,
-        source: null,
-        fit: 'cover',
-        zoom: 1,
-        offsetX: 0,
-        offsetY: 0,
-        background: '#000000',
-        dragging: false,
-        dragX: 0,
-        dragY: 0,
-        baseOffsetX: 0,
-        baseOffsetY: 0
-      };
+            const context = elements.previewCanvas.getContext('2d', {alpha: false, willReadFrequently: true});
+            const state = {
+                header: null,
+                originalCanvas: null,
+                source: null,
+                fit: 'cover',
+                zoom: 1,
+                offsetX: 0,
+                offsetY: 0,
+                background: '#000000',
+                dragging: false,
+                dragX: 0,
+                dragY: 0,
+                baseOffsetX: 0,
+                baseOffsetY: 0
+            };
 
-      function setMessage(text, tone = '') {
-        elements.message.textContent = text;
-        elements.message.className = `message${tone ? ` is-${tone}` : ''}`;
-      }
+            function setMessage(text, tone = '') {
+                elements.message.textContent = text;
+                elements.message.className = `message${tone ? ` is-${tone}` : ''}`;
+            }
 
-      function formatBytes(bytes) {
-        return `${new Intl.NumberFormat('zh-CN').format(bytes)} 字节`;
-      }
+            function formatBytes(bytes) {
+                return `${new Intl.NumberFormat('zh-CN').format(bytes)} 字节`;
+            }
 
-      function hex32(value) {
-        return `0x${value.toString(16).toUpperCase().padStart(8, '0')}`;
-      }
+            function hex32(value) {
+                return `0x${value.toString(16).toUpperCase().padStart(8, '0')}`;
+            }
 
-      function updateControls() {
-        elements.zoomRange.value = Math.round(state.zoom * 100);
-        elements.zoomValue.value = `${Math.round(state.zoom * 100)}%`;
-        elements.offsetXRange.value = Math.round(state.offsetX);
-        elements.offsetXValue.value = `${Math.round(state.offsetX)} px`;
-        elements.offsetYRange.value = Math.round(state.offsetY);
-        elements.offsetYValue.value = `${Math.round(state.offsetY)} px`;
-        elements.fitButtons.forEach((button) => {
-          button.setAttribute('aria-pressed', String(button.dataset.fit === state.fit));
-        });
-      }
+            function updateControls() {
+                elements.zoomRange.value = Math.round(state.zoom * 100);
+                elements.zoomValue.value = `${Math.round(state.zoom * 100)}%`;
+                elements.offsetXRange.value = Math.round(state.offsetX);
+                elements.offsetXValue.value = `${Math.round(state.offsetX)} px`;
+                elements.offsetYRange.value = Math.round(state.offsetY);
+                elements.offsetYValue.value = `${Math.round(state.offsetY)} px`;
+                elements.fitButtons.forEach((button) => {
+                    button.setAttribute('aria-pressed', String(button.dataset.fit === state.fit));
+                });
+            }
 
-      function resetPlacement(render = true) {
-        state.zoom = 1;
-        state.offsetX = 0;
-        state.offsetY = 0;
-        updateControls();
-        if (render) renderCanvas();
-      }
+            function resetPlacement(render = true) {
+                state.zoom = 1;
+                state.offsetX = 0;
+                state.offsetY = 0;
+                updateControls();
+                if (render) renderCanvas();
+            }
 
-      function renderCanvas() {
-        context.save();
-        context.fillStyle = state.background;
-        context.fillRect(0, 0, WIDTH, HEIGHT);
+            function renderCanvas() {
+                context.save();
+                context.fillStyle = state.background;
+                context.fillRect(0, 0, WIDTH, HEIGHT);
 
-        if (state.source) {
-          const sourceWidth = state.source.width;
-          const sourceHeight = state.source.height;
-          let drawWidth;
-          let drawHeight;
+                if (state.source) {
+                    const sourceWidth = state.source.width;
+                    const sourceHeight = state.source.height;
+                    let drawWidth;
+                    let drawHeight;
 
-          if (state.fit === 'stretch') {
-            drawWidth = WIDTH * state.zoom;
-            drawHeight = HEIGHT * state.zoom;
-          } else {
-            const baseScale = state.fit === 'contain'
-              ? Math.min(WIDTH / sourceWidth, HEIGHT / sourceHeight)
-              : Math.max(WIDTH / sourceWidth, HEIGHT / sourceHeight);
-            drawWidth = sourceWidth * baseScale * state.zoom;
-            drawHeight = sourceHeight * baseScale * state.zoom;
-          }
+                    if (state.fit === 'stretch') {
+                        drawWidth = WIDTH * state.zoom;
+                        drawHeight = HEIGHT * state.zoom;
+                    } else {
+                        const baseScale = state.fit === 'contain'
+                            ? Math.min(WIDTH / sourceWidth, HEIGHT / sourceHeight)
+                            : Math.max(WIDTH / sourceWidth, HEIGHT / sourceHeight);
+                        drawWidth = sourceWidth * baseScale * state.zoom;
+                        drawHeight = sourceHeight * baseScale * state.zoom;
+                    }
 
-          const x = ((WIDTH - drawWidth) / 2) + state.offsetX;
-          const y = ((HEIGHT - drawHeight) / 2) + state.offsetY;
-          context.imageSmoothingEnabled = true;
-          context.imageSmoothingQuality = 'high';
-          context.drawImage(state.source, x, y, drawWidth, drawHeight);
-        }
-        context.restore();
-      }
+                    const x = ((WIDTH - drawWidth) / 2) + state.offsetX;
+                    const y = ((HEIGHT - drawHeight) / 2) + state.offsetY;
+                    context.imageSmoothingEnabled = true;
+                    context.imageSmoothingQuality = 'high';
+                    context.drawImage(state.source, x, y, drawWidth, drawHeight);
+                }
+                context.restore();
+            }
 
-      function rawRgb565ToCanvas(raw) {
-        const canvas = document.createElement('canvas');
-        canvas.width = WIDTH;
-        canvas.height = HEIGHT;
-        const sourceContext = canvas.getContext('2d', { alpha: false });
-        const imageData = sourceContext.createImageData(WIDTH, HEIGHT);
-        const rgba = imageData.data;
+            function rawRgb565ToCanvas(raw) {
+                const canvas = document.createElement('canvas');
+                canvas.width = WIDTH;
+                canvas.height = HEIGHT;
+                const sourceContext = canvas.getContext('2d', {alpha: false});
+                const imageData = sourceContext.createImageData(WIDTH, HEIGHT);
+                const rgba = imageData.data;
 
-        for (let pixel = 0, rawOffset = 0, rgbaOffset = 0; pixel < WIDTH * HEIGHT; pixel++, rawOffset += 2, rgbaOffset += 4) {
-          const value = raw[rawOffset] | (raw[rawOffset + 1] << 8);
-          const r5 = (value >>> 11) & 0x1f;
-          const g6 = (value >>> 5) & 0x3f;
-          const b5 = value & 0x1f;
-          rgba[rgbaOffset] = Math.floor((r5 * 255 + 15) / 31);
-          rgba[rgbaOffset + 1] = Math.floor((g6 * 255 + 31) / 63);
-          rgba[rgbaOffset + 2] = Math.floor((b5 * 255 + 15) / 31);
-          rgba[rgbaOffset + 3] = 255;
-        }
+                for (let pixel = 0, rawOffset = 0, rgbaOffset = 0; pixel < WIDTH * HEIGHT; pixel++, rawOffset += 2, rgbaOffset += 4) {
+                    const value = raw[rawOffset] | (raw[rawOffset + 1] << 8);
+                    const r5 = (value >>> 11) & 0x1f;
+                    const g6 = (value >>> 5) & 0x3f;
+                    const b5 = value & 0x1f;
+                    rgba[rgbaOffset] = Math.floor((r5 * 255 + 15) / 31);
+                    rgba[rgbaOffset + 1] = Math.floor((g6 * 255 + 31) / 63);
+                    rgba[rgbaOffset + 2] = Math.floor((b5 * 255 + 15) / 31);
+                    rgba[rgbaOffset + 3] = 255;
+                }
 
-        sourceContext.putImageData(imageData, 0, 0);
-        return canvas;
-      }
+                sourceContext.putImageData(imageData, 0, 0);
+                return canvas;
+            }
 
-      function canvasToRawRgb565() {
-        const rgba = context.getImageData(0, 0, WIDTH, HEIGHT).data;
-        const raw = new Uint8Array(RAW_LENGTH);
+            function canvasToRawRgb565() {
+                const rgba = context.getImageData(0, 0, WIDTH, HEIGHT).data;
+                const raw = new Uint8Array(RAW_LENGTH);
 
-        for (let pixel = 0, rawOffset = 0, rgbaOffset = 0; pixel < WIDTH * HEIGHT; pixel++, rawOffset += 2, rgbaOffset += 4) {
-          const r5 = Math.floor((rgba[rgbaOffset] * 31 + 127) / 255);
-          const g6 = Math.floor((rgba[rgbaOffset + 1] * 63 + 127) / 255);
-          const b5 = Math.floor((rgba[rgbaOffset + 2] * 31 + 127) / 255);
-          const value = (r5 << 11) | (g6 << 5) | b5;
-          raw[rawOffset] = value & 0xff;
-          raw[rawOffset + 1] = value >>> 8;
-        }
-        return raw;
-      }
+                for (let pixel = 0, rawOffset = 0, rgbaOffset = 0; pixel < WIDTH * HEIGHT; pixel++, rawOffset += 2, rgbaOffset += 4) {
+                    const r5 = Math.floor((rgba[rgbaOffset] * 31 + 127) / 255);
+                    const g6 = Math.floor((rgba[rgbaOffset + 1] * 63 + 127) / 255);
+                    const b5 = Math.floor((rgba[rgbaOffset + 2] * 31 + 127) / 255);
+                    const value = (r5 << 11) | (g6 << 5) | b5;
+                    raw[rawOffset] = value & 0xff;
+                    raw[rawOffset + 1] = value >>> 8;
+                }
+                return raw;
+            }
 
-      async function transformDeflate(bytes, mode) {
-        const Transform = mode === 'compress' ? CompressionStream : DecompressionStream;
-        const stream = new Blob([bytes]).stream().pipeThrough(new Transform('deflate'));
-        return new Uint8Array(await new Response(stream).arrayBuffer());
-      }
+            async function transformDeflate(bytes, mode) {
+                const Transform = mode === 'compress' ? CompressionStream : DecompressionStream;
+                const stream = new Blob([bytes]).stream().pipeThrough(new Transform('deflate'));
+                return new Uint8Array(await new Response(stream).arrayBuffer());
+            }
 
-      async function inflateThemePayload(payload) {
-        let lastError;
-        for (let trim = 0; trim <= Math.min(3, payload.length - 1); trim++) {
-          try {
-            const candidate = trim === 0 ? payload : payload.subarray(0, payload.length - trim);
-            return await transformDeflate(candidate, 'decompress');
-          } catch (error) {
-            lastError = error;
-          }
-        }
-        throw lastError || new Error('zlib 解压失败');
-      }
+            async function inflateThemePayload(payload) {
+                let lastError;
+                for (let trim = 0; trim <= Math.min(3, payload.length - 1); trim++) {
+                    try {
+                        const candidate = trim === 0 ? payload : payload.subarray(0, payload.length - trim);
+                        return await transformDeflate(candidate, 'decompress');
+                    } catch (error) {
+                        lastError = error;
+                    }
+                }
+                throw lastError || new Error('zlib 解压失败');
+            }
 
-      async function loadTheme(file) {
-        if (typeof DecompressionStream === 'undefined' || typeof CompressionStream === 'undefined') {
-          throw new Error('当前浏览器不支持本地压缩，请使用最新版 Chrome 或 Edge');
-        }
+            async function loadTheme(file) {
+                if (typeof DecompressionStream === 'undefined' || typeof CompressionStream === 'undefined') {
+                    throw new Error('当前浏览器不支持本地压缩，请使用最新版 Chrome 或 Edge');
+                }
 
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (bytes.length < HEADER_LENGTH + 2) throw new Error('文件过短，不是有效的主题包');
+                const bytes = new Uint8Array(await file.arrayBuffer());
+                if (bytes.length < HEADER_LENGTH + 2) throw new Error('文件过短，不是有效的主题包');
 
-        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        const rawLength = view.getUint32(4, true);
-        const packedLength = view.getUint32(8, true);
-        if (rawLength !== RAW_LENGTH) throw new Error(`图片数据长度应为 ${RAW_LENGTH}，当前为 ${rawLength}`);
-        if (packedLength > bytes.length - HEADER_LENGTH || packedLength < 2) throw new Error('包头中的压缩长度无效');
+                const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+                const rawLength = view.getUint32(4, true);
+                const packedLength = view.getUint32(8, true);
+                if (rawLength !== RAW_LENGTH) throw new Error(`图片数据长度应为 ${RAW_LENGTH}，当前为 ${rawLength}`);
+                if (packedLength > bytes.length - HEADER_LENGTH || packedLength < 2) throw new Error('包头中的压缩长度无效');
 
-        const payload = bytes.subarray(HEADER_LENGTH, HEADER_LENGTH + packedLength);
-        if (payload[0] !== 0x78) throw new Error('压缩区不是有效的 zlib 数据');
-        const raw = await inflateThemePayload(payload);
-        if (raw.length !== rawLength) throw new Error(`解压得到 ${raw.length} 字节，与包头不一致`);
+                const payload = bytes.subarray(HEADER_LENGTH, HEADER_LENGTH + packedLength);
+                if (payload[0] !== 0x78) throw new Error('压缩区不是有效的 zlib 数据');
+                const raw = await inflateThemePayload(payload);
+                if (raw.length !== rawLength) throw new Error(`解压得到 ${raw.length} 字节，与包头不一致`);
 
-        state.header = bytes.slice(0, HEADER_LENGTH);
-        state.originalCanvas = rawRgb565ToCanvas(raw);
-        state.source = state.originalCanvas;
-        state.fit = 'stretch';
-        state.background = '#000000';
-        elements.backgroundColor.value = state.background;
-        resetPlacement(false);
-        renderCanvas();
+                state.header = bytes.slice(0, HEADER_LENGTH);
+                state.originalCanvas = rawRgb565ToCanvas(raw);
+                state.source = state.originalCanvas;
+                state.fit = 'stretch';
+                state.background = '#000000';
+                elements.backgroundColor.value = state.background;
+                resetPlacement(false);
+                renderCanvas();
 
-        const headerView = new DataView(state.header.buffer, state.header.byteOffset, state.header.byteLength);
-        elements.themeFileName.textContent = file.name;
-        elements.headerValue.textContent = hex32(headerView.getUint32(0, true));
-        elements.rawSize.textContent = formatBytes(rawLength);
-        elements.packedSize.textContent = formatBytes(packedLength);
-        elements.reservedValue.textContent = hex32(headerView.getUint32(12, true));
-        elements.outputName.value = `${file.name.replace(/\.bin$/i, '') || 'theme'}_new.bin`;
-        elements.packButton.disabled = false;
-        elements.restoreButton.disabled = false;
-        elements.pngButton.disabled = false;
-        elements.emptyState.hidden = true;
-        elements.statusBadge.textContent = '已载入';
-        elements.statusBadge.className = 'status-badge';
-        setMessage('主题包校验通过');
-      }
+                const headerView = new DataView(state.header.buffer, state.header.byteOffset, state.header.byteLength);
+                elements.themeFileName.textContent = file.name;
+                elements.headerValue.textContent = hex32(headerView.getUint32(0, true));
+                elements.rawSize.textContent = formatBytes(rawLength);
+                elements.packedSize.textContent = formatBytes(packedLength);
+                elements.reservedValue.textContent = hex32(headerView.getUint32(12, true));
+                elements.outputName.value = `${file.name.replace(/\.bin$/i, '') || 'theme'}_new.bin`;
+                elements.packButton.disabled = false;
+                elements.restoreButton.disabled = false;
+                elements.pngButton.disabled = false;
+                elements.emptyState.hidden = true;
+                elements.statusBadge.textContent = '已载入';
+                elements.statusBadge.className = 'status-badge';
+                setMessage('主题包校验通过');
+            }
 
-      async function loadReplacement(file) {
-        if (!state.header) throw new Error('请先打开主题包');
-        const bitmap = await createImageBitmap(file);
-        if (state.source instanceof ImageBitmap && state.source !== bitmap) state.source.close();
-        state.source = bitmap;
-        state.fit = 'cover';
-        resetPlacement(false);
-        renderCanvas();
-        setMessage(`${file.name} · ${bitmap.width} × ${bitmap.height}`);
-      }
+            async function loadReplacement(file) {
+                if (!state.header) throw new Error('请先打开主题包');
+                const bitmap = await createImageBitmap(file);
+                if (state.source instanceof ImageBitmap && state.source !== bitmap) state.source.close();
+                state.source = bitmap;
+                state.fit = 'cover';
+                resetPlacement(false);
+                renderCanvas();
+                setMessage(`${file.name} · ${bitmap.width} × ${bitmap.height}`);
+            }
 
-      function restoreOriginal() {
-        if (!state.originalCanvas) return;
-        if (state.source instanceof ImageBitmap) state.source.close();
-        state.source = state.originalCanvas;
-        state.fit = 'stretch';
-        resetPlacement(false);
-        renderCanvas();
-        setMessage('已恢复包内图片');
-      }
+            function restoreOriginal() {
+                if (!state.originalCanvas) return;
+                if (state.source instanceof ImageBitmap) state.source.close();
+                state.source = state.originalCanvas;
+                state.fit = 'stretch';
+                resetPlacement(false);
+                renderCanvas();
+                setMessage('已恢复包内图片');
+            }
 
-      function downloadBlob(blob, name) {
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = name;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
+            function downloadBlob(blob, name) {
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = name;
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
 
-      async function packTheme() {
-        if (!state.header) return;
-        const raw = canvasToRawRgb565();
-        const compressed = await transformDeflate(raw, 'compress');
-        const alignedLength = (compressed.length + 3) & ~3;
-        const output = new Uint8Array(HEADER_LENGTH + alignedLength);
-        output.set(state.header, 0);
-        output.set(compressed, HEADER_LENGTH);
+            async function packTheme() {
+                if (!state.header) return;
+                const raw = canvasToRawRgb565();
+                const compressed = await transformDeflate(raw, 'compress');
+                const alignedLength = (compressed.length + 3) & ~3;
+                const output = new Uint8Array(HEADER_LENGTH + alignedLength);
+                output.set(state.header, 0);
+                output.set(compressed, HEADER_LENGTH);
 
-        const outputView = new DataView(output.buffer);
-        outputView.setUint32(4, raw.length, true);
-        outputView.setUint32(8, alignedLength, true);
+                const outputView = new DataView(output.buffer);
+                outputView.setUint32(4, raw.length, true);
+                outputView.setUint32(8, alignedLength, true);
 
-        let fileName = elements.outputName.value.trim() || 'theme_new.bin';
-        if (!fileName.toLowerCase().endsWith('.bin')) fileName += '.bin';
-        downloadBlob(new Blob([output], { type: 'application/octet-stream' }), fileName);
-        setMessage(`打包完成 · ${formatBytes(output.length)}`);
-      }
+                let fileName = elements.outputName.value.trim() || 'theme_new.bin';
+                if (!fileName.toLowerCase().endsWith('.bin')) fileName += '.bin';
+                downloadBlob(new Blob([output], {type: 'application/octet-stream'}), fileName);
+                setMessage(`打包完成 · ${formatBytes(output.length)}`);
+            }
 
-      function exportPng() {
-        elements.previewCanvas.toBlob((blob) => {
-          if (blob) downloadBlob(blob, 'theme_preview.png');
-        }, 'image/png');
-      }
+            function exportPng() {
+                elements.previewCanvas.toBlob((blob) => {
+                    if (blob) downloadBlob(blob, 'theme_preview.png');
+                }, 'image/png');
+            }
 
-      elements.themeInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        setMessage('正在解析主题包…');
-        try {
-          await loadTheme(file);
-        } catch (error) {
-          setMessage(error.message || String(error), 'error');
-          elements.statusBadge.textContent = '解析失败';
-          elements.statusBadge.className = 'status-badge is-idle';
-        } finally {
-          event.target.value = '';
-        }
-      });
+            elements.themeInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                setMessage('正在解析主题包…');
+                try {
+                    await loadTheme(file);
+                } catch (error) {
+                    setMessage(error.message || String(error), 'error');
+                    elements.statusBadge.textContent = '解析失败';
+                    elements.statusBadge.className = 'status-badge is-idle';
+                } finally {
+                    event.target.value = '';
+                }
+            });
 
-      elements.imageInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        try {
-          await loadReplacement(file);
-        } catch (error) {
-          setMessage(error.message || String(error), 'error');
-        } finally {
-          event.target.value = '';
-        }
-      });
+            elements.imageInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                try {
+                    await loadReplacement(file);
+                } catch (error) {
+                    setMessage(error.message || String(error), 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            });
 
-      elements.fitButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          state.fit = button.dataset.fit;
-          resetPlacement(false);
-          renderCanvas();
-        });
-      });
+            elements.fitButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    state.fit = button.dataset.fit;
+                    resetPlacement(false);
+                    renderCanvas();
+                });
+            });
 
-      elements.zoomRange.addEventListener('input', () => {
-        state.zoom = Number(elements.zoomRange.value) / 100;
-        updateControls();
-        renderCanvas();
-      });
+            elements.zoomRange.addEventListener('input', () => {
+                state.zoom = Number(elements.zoomRange.value) / 100;
+                updateControls();
+                renderCanvas();
+            });
 
-      elements.offsetXRange.addEventListener('input', () => {
-        state.offsetX = Number(elements.offsetXRange.value);
-        updateControls();
-        renderCanvas();
-      });
+            elements.offsetXRange.addEventListener('input', () => {
+                state.offsetX = Number(elements.offsetXRange.value);
+                updateControls();
+                renderCanvas();
+            });
 
-      elements.offsetYRange.addEventListener('input', () => {
-        state.offsetY = Number(elements.offsetYRange.value);
-        updateControls();
-        renderCanvas();
-      });
+            elements.offsetYRange.addEventListener('input', () => {
+                state.offsetY = Number(elements.offsetYRange.value);
+                updateControls();
+                renderCanvas();
+            });
 
-      elements.backgroundColor.addEventListener('input', () => {
-        state.background = elements.backgroundColor.value;
-        renderCanvas();
-      });
+            elements.backgroundColor.addEventListener('input', () => {
+                state.background = elements.backgroundColor.value;
+                renderCanvas();
+            });
 
-      elements.resetPositionButton.addEventListener('click', () => resetPlacement());
-      elements.restoreButton.addEventListener('click', restoreOriginal);
-      elements.packButton.addEventListener('click', () => {
-        packTheme().catch((error) => setMessage(error.message || String(error), 'error'));
-      });
-      elements.pngButton.addEventListener('click', exportPng);
+            elements.resetPositionButton.addEventListener('click', () => resetPlacement());
+            elements.restoreButton.addEventListener('click', restoreOriginal);
+            elements.packButton.addEventListener('click', () => {
+                packTheme().catch((error) => setMessage(error.message || String(error), 'error'));
+            });
+            elements.pngButton.addEventListener('click', exportPng);
 
-      elements.previewCanvas.addEventListener('pointerdown', (event) => {
-        if (!state.source) return;
-        state.dragging = true;
-        state.dragX = event.clientX;
-        state.dragY = event.clientY;
-        state.baseOffsetX = state.offsetX;
-        state.baseOffsetY = state.offsetY;
-        elements.previewCanvas.classList.add('is-dragging');
-        elements.previewCanvas.setPointerCapture(event.pointerId);
-      });
+            elements.previewCanvas.addEventListener('pointerdown', (event) => {
+                if (!state.source) return;
+                state.dragging = true;
+                state.dragX = event.clientX;
+                state.dragY = event.clientY;
+                state.baseOffsetX = state.offsetX;
+                state.baseOffsetY = state.offsetY;
+                elements.previewCanvas.classList.add('is-dragging');
+                elements.previewCanvas.setPointerCapture(event.pointerId);
+            });
 
-      elements.previewCanvas.addEventListener('pointermove', (event) => {
-        const rect = elements.previewCanvas.getBoundingClientRect();
-        const x = Math.max(0, Math.min(WIDTH - 1, Math.floor((event.clientX - rect.left) * WIDTH / rect.width)));
-        const y = Math.max(0, Math.min(HEIGHT - 1, Math.floor((event.clientY - rect.top) * HEIGHT / rect.height)));
-        elements.pixelPosition.textContent = `X ${x} · Y ${y}`;
+            elements.previewCanvas.addEventListener('pointermove', (event) => {
+                const rect = elements.previewCanvas.getBoundingClientRect();
+                const x = Math.max(0, Math.min(WIDTH - 1, Math.floor((event.clientX - rect.left) * WIDTH / rect.width)));
+                const y = Math.max(0, Math.min(HEIGHT - 1, Math.floor((event.clientY - rect.top) * HEIGHT / rect.height)));
+                elements.pixelPosition.textContent = `X ${x} · Y ${y}`;
 
-        if (!state.dragging) return;
-        state.offsetX = Math.max(-240, Math.min(240, state.baseOffsetX + ((event.clientX - state.dragX) * WIDTH / rect.width)));
-        state.offsetY = Math.max(-320, Math.min(320, state.baseOffsetY + ((event.clientY - state.dragY) * HEIGHT / rect.height)));
-        updateControls();
-        renderCanvas();
-      });
+                if (!state.dragging) return;
+                state.offsetX = Math.max(-240, Math.min(240, state.baseOffsetX + ((event.clientX - state.dragX) * WIDTH / rect.width)));
+                state.offsetY = Math.max(-320, Math.min(320, state.baseOffsetY + ((event.clientY - state.dragY) * HEIGHT / rect.height)));
+                updateControls();
+                renderCanvas();
+            });
 
-      function endDrag(event) {
-        if (!state.dragging) return;
-        state.dragging = false;
-        elements.previewCanvas.classList.remove('is-dragging');
-        if (event && elements.previewCanvas.hasPointerCapture(event.pointerId)) {
-          elements.previewCanvas.releasePointerCapture(event.pointerId);
-        }
-      }
+            function endDrag(event) {
+                if (!state.dragging) return;
+                state.dragging = false;
+                elements.previewCanvas.classList.remove('is-dragging');
+                if (event && elements.previewCanvas.hasPointerCapture(event.pointerId)) {
+                    elements.previewCanvas.releasePointerCapture(event.pointerId);
+                }
+            }
 
-      elements.previewCanvas.addEventListener('pointerup', endDrag);
-      elements.previewCanvas.addEventListener('pointercancel', endDrag);
-      elements.previewCanvas.addEventListener('pointerleave', () => {
-        if (!state.dragging) elements.pixelPosition.textContent = 'X 0 · Y 0';
-      });
+            elements.previewCanvas.addEventListener('pointerup', endDrag);
+            elements.previewCanvas.addEventListener('pointercancel', endDrag);
+            elements.previewCanvas.addEventListener('pointerleave', () => {
+                if (!state.dragging) elements.pixelPosition.textContent = 'X 0 · Y 0';
+            });
 
-      context.fillStyle = '#000000';
-      context.fillRect(0, 0, WIDTH, HEIGHT);
-      updateControls();
-    })();
-  </script>
+            context.fillStyle = '#000000';
+            context.fillRect(0, 0, WIDTH, HEIGHT);
+            updateControls();
+        })();
+    </script>
 </body>
-</html>
 
+</html>
