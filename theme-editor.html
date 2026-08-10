@@ -1,0 +1,3550 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S2 主题包编辑器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f3f5f3;
+      --surface: #ffffff;
+      --surface-strong: #171b19;
+      --text: #1b211e;
+      --muted: #66706a;
+      --border: #d9dfdb;
+      --border-strong: #b9c2bc;
+      --primary: #176b52;
+      --primary-hover: #105640;
+      --primary-soft: #e5f1ec;
+      --warning: #9a5b10;
+      --danger: #a13a32;
+      --focus: #2d8f71;
+      --shadow: 0 12px 32px rgba(24, 34, 29, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--page);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    button, input, select { font: inherit; }
+
+    button, .file-button {
+      min-height: 38px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      line-height: 1.2;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled), .file-button:hover { border-color: var(--primary); }
+    button:focus-visible, input:focus-visible, select:focus-visible, .file-button:focus-within {
+      outline: 3px solid rgba(45, 143, 113, 0.28);
+      outline-offset: 2px;
+    }
+
+    button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+    .primary-button {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .primary-button:hover:not(:disabled) {
+      border-color: var(--primary-hover);
+      background: var(--primary-hover);
+    }
+
+    .ghost-button { background: transparent; }
+
+    .file-button input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .app-header {
+      min-height: 72px;
+      padding: 14px clamp(16px, 3vw, 38px);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: var(--surface-strong);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    h1, h2, p { margin: 0; }
+    h1 { font-size: 18px; font-weight: 600; }
+    h2 { font-size: 15px; font-weight: 600; }
+
+    .file-name {
+      margin-top: 3px;
+      max-width: min(52vw, 560px);
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .workspace {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: clamp(18px, 3vw, 34px);
+      display: grid;
+      grid-template-columns: minmax(360px, 1fr) minmax(300px, 390px);
+      gap: clamp(22px, 4vw, 48px);
+      align-items: start;
+    }
+
+    .preview-column { min-width: 0; }
+
+    .section-heading {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .status-badge {
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-badge.is-idle {
+      background: #ecefed;
+      color: var(--muted);
+    }
+
+    .preview-shell {
+      min-height: 520px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 4vw, 34px);
+    }
+
+    .canvas-frame {
+      position: relative;
+      width: min(100%, 360px);
+      aspect-ratio: 3 / 4;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #000000;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+      user-select: none;
+      touch-action: none;
+    }
+
+    .canvas-frame::before {
+      content: "";
+      display: block;
+      padding-top: 133.3333%;
+    }
+
+    @supports (aspect-ratio: 3 / 4) {
+      .canvas-frame::before { display: none; }
+    }
+
+    .canvas-frame canvas {
+      position: absolute;
+      inset: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    .canvas-frame canvas.is-dragging { cursor: grabbing; }
+
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: grid;
+      place-items: center;
+      color: #9ba29e;
+      background: #0e1110;
+      pointer-events: none;
+    }
+
+    .empty-state[hidden] { display: none; }
+
+    .preview-footer {
+      margin-top: 12px;
+      min-height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .control-column {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .control-section { padding: 20px; }
+    .control-section + .control-section { border-top: 1px solid var(--border); }
+    .control-section h2 { margin-bottom: 14px; }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .segmented {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .segmented button {
+      min-width: 0;
+      border: 0;
+      border-radius: 0;
+      background: var(--surface);
+      padding-inline: 8px;
+    }
+
+    .segmented button + button { border-left: 1px solid var(--border-strong); }
+    .segmented button[aria-pressed="true"] { background: var(--surface-strong); color: #ffffff; }
+
+    .field { display: grid; gap: 7px; }
+    .field + .field { margin-top: 15px; }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .field-label output { color: var(--text); font-variant-numeric: tabular-nums; }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    input[type="color"] {
+      width: 44px;
+      height: 34px;
+      padding: 3px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .metadata {
+      margin: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px 16px;
+      font-size: 13px;
+    }
+
+    .metadata dt { color: var(--muted); }
+    .metadata dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+    .message {
+      min-height: 20px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .message.is-error { color: var(--danger); }
+    .message.is-warning { color: var(--warning); }
+
+    @media (max-width: 820px) {
+      .app-header { align-items: flex-start; }
+      .workspace { grid-template-columns: 1fr; }
+      .preview-shell { min-height: 0; }
+      .canvas-frame { width: min(100%, 320px); }
+    }
+
+    @media (max-width: 560px) {
+      .app-header { flex-direction: column; }
+      .header-actions { width: 100%; }
+      .header-actions > * { flex: 1 1 0; }
+      .file-name { max-width: calc(100vw - 86px); }
+      .workspace { padding: 14px; gap: 18px; }
+      .preview-shell { padding: 16px; }
+      .control-section { padding: 17px; }
+      .preview-footer { align-items: flex-start; flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">S2</div>
+      <div>
+        <h1>主题包编辑器</h1>
+        <p class="file-name" id="themeFileName">未载入主题包</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label class="file-button">
+        打开 BIN
+        <input id="themeInput" type="file" accept=".bin,application/octet-stream">
+      </label>
+      <button class="primary-button" id="packButton" type="button" disabled>打包 BIN</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="preview-column" aria-labelledby="previewTitle">
+      <div class="section-heading">
+        <h2 id="previewTitle">画面预览</h2>
+        <span class="status-badge is-idle" id="statusBadge">未载入</span>
+      </div>
+      <div class="preview-shell">
+        <div class="canvas-frame" id="canvasFrame">
+          <canvas id="previewCanvas" width="240" height="320" aria-label="240乘320主题图片预览"></canvas>
+          <div class="empty-state" id="emptyState">未载入主题</div>
+        </div>
+      </div>
+      <div class="preview-footer">
+        <span>240 × 320 · RGB565 LE</span>
+        <span id="pixelPosition">X 0 · Y 0</span>
+      </div>
+    </section>
+
+    <aside class="control-column" aria-label="主题编辑控件">
+      <section class="control-section">
+        <h2>图片</h2>
+        <div class="action-row">
+          <label class="file-button">
+            替换图片
+            <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp">
+          </label>
+          <button id="restoreButton" type="button" disabled>恢复原图</button>
+          <button id="pngButton" type="button" disabled>导出 PNG</button>
+        </div>
+      </section>
+
+      <section class="control-section">
+        <h2>画面调整</h2>
+        <div class="field">
+          <span class="field-label">适配方式</span>
+          <div class="segmented" role="group" aria-label="图片适配方式">
+            <button type="button" data-fit="cover" aria-pressed="true">填充</button>
+            <button type="button" data-fit="contain" aria-pressed="false">适应</button>
+            <button type="button" data-fit="stretch" aria-pressed="false">拉伸</button>
+          </div>
+        </div>
+
+        <label class="field">
+          <span class="field-label">缩放 <output id="zoomValue">100%</output></span>
+          <input id="zoomRange" type="range" min="50" max="250" value="100" step="1">
+        </label>
+
+        <label class="field">
+          <span class="field-label">水平位置 <output id="offsetXValue">0 px</output></span>
+          <input id="offsetXRange" type="range" min="-240" max="240" value="0" step="1">
+        </label>
+
+        <label class="field">
+          <span class="field-label">垂直位置 <output id="offsetYValue">0 px</output></span>
+          <input id="offsetYRange" type="range" min="-320" max="320" value="0" step="1">
+        </label>
+
+        <div class="field color-row">
+          <label for="backgroundColor">画布底色</label>
+          <input id="backgroundColor" type="color" value="#000000">
+        </div>
+
+        <div class="action-row" style="margin-top: 16px;">
+          <button class="ghost-button" id="resetPositionButton" type="button">重置位置</button>
+        </div>
+      </section>
+
+      <section class="control-section">
+        <h2>包信息</h2>
+        <dl class="metadata">
+          <dt>设备字段</dt><dd id="headerValue">—</dd>
+          <dt>原始数据</dt><dd id="rawSize">—</dd>
+          <dt>压缩数据</dt><dd id="packedSize">—</dd>
+          <dt>保留字段</dt><dd id="reservedValue">—</dd>
+        </dl>
+      </section>
+
+      <section class="control-section">
+        <h2>主题定义</h2>
+        <label class="field" for="themeName">
+          <span class="field-label">中文名称</span>
+          <input id="themeName" type="text" value="明月" spellcheck="false">
+        </label>
+        <label class="field" for="themeNameEn">
+          <span class="field-label">英文名称</span>
+          <input id="themeNameEn" type="text" value="Moon" spellcheck="false">
+        </label>
+        <label class="field" for="themeConfig">
+          <span class="field-label">主题配置</span>
+          <input id="themeConfig" type="text" value="10,291,10,266,3,15,10,234,3,164,0,0,0,0,18" spellcheck="false">
+        </label>
+        <label class="field" for="resourceBaseUrl">
+          <span class="field-label">资源目录 URL</span>
+          <input id="resourceBaseUrl" type="url" value="https://s2dw.ks3-cn-shanghai.ksyuncs.com/v1/my/" spellcheck="false">
+        </label>
+      </section>
+
+      <section class="control-section">
+        <h2>输出</h2>
+        <label class="field" for="outputName">
+          <span class="field-label">BIN 文件名</span>
+          <input id="outputName" type="text" value="theme_new.bin" spellcheck="false">
+        </label>
+        <div class="action-row" style="margin-top: 16px;">
+          <button id="mainImageButton" type="button" disabled>下载 main.jpg</button>
+          <button id="subImageButton" type="button" disabled>下载 sl.png</button>
+          <button class="primary-button" id="packageButton" type="button" disabled>完整主题 ZIP</button>
+        </div>
+        <p class="message" id="message" role="status" aria-live="polite"></p>
+      </section>
+    </aside>
+  </main>
+
+  <!-- fflate 0.8.2, MIT License: https://github.com/101arrowz/fflate -->
+  <script>
+!function(f){typeof module!='undefined'&&typeof exports=='object'?module.exports=f():typeof define!='undefined'&&define.amd?define(f):(typeof self!='undefined'?self:this).fflate=f()}(function(){var _e={};"use strict";var t=(typeof module!='undefined'&&typeof exports=='object'?function(_f){"use strict";var e,t=";var __w=require('worker_threads');__w.parentPort.on('message',function(m){onmessage({data:m})}),postMessage=function(m,t){__w.parentPort.postMessage(m,t)},close=process.exit;self=global";try{e=require("worker_threads").Worker}catch(e){}exports.default=e?function(r,n,o,a,s){var u=!1,i=new e(r+t,{eval:!0}).on("error",(function(e){return s(e,null)})).on("message",(function(e){return s(null,e)})).on("exit",(function(e){e&&!u&&s(Error("exited with code "+e),null)}));return i.postMessage(o,a),i.terminate=function(){return u=!0,e.prototype.terminate.call(i)},i}:function(e,t,r,n,o){setImmediate((function(){return o(Error("async operations unsupported - update to Node 12+ (or Node 10-11 with the --experimental-worker CLI flag)"),null)}));var a=function(){};return{terminate:a,postMessage:a}};return _f}:function(_f){"use strict";var e={};_f.default=function(r,t,s,a,n){var o=new Worker(e[t]||(e[t]=URL.createObjectURL(new Blob([r+';addEventListener("error",function(e){e=e.error;postMessage({$e$:[e.message,e.code,e.stack]})})'],{type:"text/javascript"}))));return o.onmessage=function(e){var r=e.data,t=r.$e$;if(t){var s=Error(t[0]);s.code=t[1],s.stack=t[2],n(s,null)}else n(null,r)},o.postMessage(s,a),o};return _f})({}),n=Uint8Array,r=Uint16Array,e=Int32Array,i=new n([0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0,0]),o=new n([0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,0,0]),s=new n([16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]),a=function(t,n){for(var i=new r(31),o=0;o<31;++o)i[o]=n+=1<<t[o-1];var s=new e(i[30]);for(o=1;o<30;++o)for(var a=i[o];a<i[o+1];++a)s[a]=a-i[o]<<5|o;return{b:i,r:s}},u=a(i,2),h=u.b,f=u.r;h[28]=258,f[258]=28;for(var l=a(o,0),c=l.b,p=l.r,v=new r(32768),d=0;d<32768;++d){var g=(43690&d)>>1|(21845&d)<<1;v[d]=((65280&(g=(61680&(g=(52428&g)>>2|(13107&g)<<2))>>4|(3855&g)<<4))>>8|(255&g)<<8)>>1}var y=function(t,n,e){for(var i=t.length,o=0,s=new r(n);o<i;++o)t[o]&&++s[t[o]-1];var a,u=new r(n);for(o=1;o<n;++o)u[o]=u[o-1]+s[o-1]<<1;if(e){a=new r(1<<n);var h=15-n;for(o=0;o<i;++o)if(t[o])for(var f=o<<4|t[o],l=n-t[o],c=u[t[o]-1]++<<l,p=c|(1<<l)-1;c<=p;++c)a[v[c]>>h]=f}else for(a=new r(i),o=0;o<i;++o)t[o]&&(a[o]=v[u[t[o]-1]++]>>15-t[o]);return a},m=new n(288);for(d=0;d<144;++d)m[d]=8;for(d=144;d<256;++d)m[d]=9;for(d=256;d<280;++d)m[d]=7;for(d=280;d<288;++d)m[d]=8;var b=new n(32);for(d=0;d<32;++d)b[d]=5;var w=y(m,9,0),x=y(m,9,1),z=y(b,5,0),k=y(b,5,1),M=function(t){for(var n=t[0],r=1;r<t.length;++r)t[r]>n&&(n=t[r]);return n},S=function(t,n,r){var e=n/8|0;return(t[e]|t[e+1]<<8)>>(7&n)&r},A=function(t,n){var r=n/8|0;return(t[r]|t[r+1]<<8|t[r+2]<<16)>>(7&n)},T=function(t){return(t+7)/8|0},D=function(t,r,e){return(null==r||r<0)&&(r=0),(null==e||e>t.length)&&(e=t.length),new n(t.subarray(r,e))};_e.FlateErrorCode={UnexpectedEOF:0,InvalidBlockType:1,InvalidLengthLiteral:2,InvalidDistance:3,StreamFinished:4,NoStreamHandler:5,InvalidHeader:6,NoCallback:7,InvalidUTF8:8,ExtraFieldTooLong:9,InvalidDate:10,FilenameTooLong:11,StreamFinishing:12,InvalidZipData:13,UnknownCompressionMethod:14};var C=["unexpected EOF","invalid block type","invalid length/literal","invalid distance","stream finished","no stream handler",,"no callback","invalid UTF-8 data","extra field too long","date not in range 1980-2099","filename too long","stream finishing","invalid zip data"],I=function(t,n,r){var e=Error(n||C[t]);if(e.code=t,Error.captureStackTrace&&Error.captureStackTrace(e,I),!r)throw e;return e},U=function(t,r,e,a){var u=t.length,f=a?a.length:0;if(!u||r.f&&!r.l)return e||new n(0);var l=!e,p=l||2!=r.i,v=r.i;l&&(e=new n(3*u));var d=function(t){var r=e.length;if(t>r){var i=new n(Math.max(2*r,t));i.set(e),e=i}},g=r.f||0,m=r.p||0,b=r.b||0,w=r.l,z=r.d,C=r.m,U=r.n,F=8*u;do{if(!w){g=S(t,m,1);var E=S(t,m+1,3);if(m+=3,!E){var Z=t[(J=T(m)+4)-4]|t[J-3]<<8,q=J+Z;if(q>u){v&&I(0);break}p&&d(b+Z),e.set(t.subarray(J,q),b),r.b=b+=Z,r.p=m=8*q,r.f=g;continue}if(1==E)w=x,z=k,C=9,U=5;else if(2==E){var O=S(t,m,31)+257,G=S(t,m+10,15)+4,L=O+S(t,m+5,31)+1;m+=14;for(var H=new n(L),j=new n(19),N=0;N<G;++N)j[s[N]]=S(t,m+3*N,7);m+=3*G;var P=M(j),B=(1<<P)-1,Y=y(j,P,1);for(N=0;N<L;){var J,K=Y[S(t,m,B)];if(m+=15&K,(J=K>>4)<16)H[N++]=J;else{var Q=0,R=0;for(16==J?(R=3+S(t,m,3),m+=2,Q=H[N-1]):17==J?(R=3+S(t,m,7),m+=3):18==J&&(R=11+S(t,m,127),m+=7);R--;)H[N++]=Q}}var V=H.subarray(0,O),W=H.subarray(O);C=M(V),U=M(W),w=y(V,C,1),z=y(W,U,1)}else I(1);if(m>F){v&&I(0);break}}p&&d(b+131072);for(var X=(1<<C)-1,$=(1<<U)-1,_=m;;_=m){var tt=(Q=w[A(t,m)&X])>>4;if((m+=15&Q)>F){v&&I(0);break}if(Q||I(2),tt<256)e[b++]=tt;else{if(256==tt){_=m,w=null;break}var nt=tt-254;tt>264&&(nt=S(t,m,(1<<(it=i[N=tt-257]))-1)+h[N],m+=it);var rt=z[A(t,m)&$],et=rt>>4;if(rt||I(3),m+=15&rt,W=c[et],et>3){var it=o[et];W+=A(t,m)&(1<<it)-1,m+=it}if(m>F){v&&I(0);break}p&&d(b+131072);var ot=b+nt;if(b<W){var st=f-W,at=Math.min(W,ot);for(st+b<0&&I(3);b<at;++b)e[b]=a[st+b]}for(;b<ot;++b)e[b]=e[b-W]}}r.l=w,r.p=_,r.b=b,r.f=g,w&&(g=1,r.m=C,r.d=z,r.n=U)}while(!g);return b!=e.length&&l?D(e,0,b):e.subarray(0,b)},F=function(t,n,r){var e=n/8|0;t[e]|=r<<=7&n,t[e+1]|=r>>8},E=function(t,n,r){var e=n/8|0;t[e]|=r<<=7&n,t[e+1]|=r>>8,t[e+2]|=r>>16},Z=function(t,e){for(var i=[],o=0;o<t.length;++o)t[o]&&i.push({s:o,f:t[o]});var s=i.length,a=i.slice();if(!s)return{t:N,l:0};if(1==s){var u=new n(i[0].s+1);return u[i[0].s]=1,{t:u,l:1}}i.sort((function(t,n){return t.f-n.f})),i.push({s:-1,f:25001});var h=i[0],f=i[1],l=0,c=1,p=2;for(i[0]={s:-1,f:h.f+f.f,l:h,r:f};c!=s-1;)h=i[i[l].f<i[p].f?l++:p++],f=i[l!=c&&i[l].f<i[p].f?l++:p++],i[c++]={s:-1,f:h.f+f.f,l:h,r:f};var v=a[0].s;for(o=1;o<s;++o)a[o].s>v&&(v=a[o].s);var d=new r(v+1),g=q(i[c-1],d,0);if(g>e){o=0;var y=0,m=g-e,b=1<<m;for(a.sort((function(t,n){return d[n.s]-d[t.s]||t.f-n.f}));o<s;++o){var w=a[o].s;if(!(d[w]>e))break;y+=b-(1<<g-d[w]),d[w]=e}for(y>>=m;y>0;){var x=a[o].s;d[x]<e?y-=1<<e-d[x]++-1:++o}for(;o>=0&&y;--o){var z=a[o].s;d[z]==e&&(--d[z],++y)}g=e}return{t:new n(d),l:g}},q=function(t,n,r){return-1==t.s?Math.max(q(t.l,n,r+1),q(t.r,n,r+1)):n[t.s]=r},O=function(t){for(var n=t.length;n&&!t[--n];);for(var e=new r(++n),i=0,o=t[0],s=1,a=function(t){e[i++]=t},u=1;u<=n;++u)if(t[u]==o&&u!=n)++s;else{if(!o&&s>2){for(;s>138;s-=138)a(32754);s>2&&(a(s>10?s-11<<5|28690:s-3<<5|12305),s=0)}else if(s>3){for(a(o),--s;s>6;s-=6)a(8304);s>2&&(a(s-3<<5|8208),s=0)}for(;s--;)a(o);s=1,o=t[u]}return{c:e.subarray(0,i),n:n}},G=function(t,n){for(var r=0,e=0;e<n.length;++e)r+=t[e]*n[e];return r},L=function(t,n,r){var e=r.length,i=T(n+2);t[i]=255&e,t[i+1]=e>>8,t[i+2]=255^t[i],t[i+3]=255^t[i+1];for(var o=0;o<e;++o)t[i+o+4]=r[o];return 8*(i+4+e)},H=function(t,n,e,a,u,h,f,l,c,p,v){F(n,v++,e),++u[256];for(var d=Z(u,15),g=d.t,x=d.l,k=Z(h,15),M=k.t,S=k.l,A=O(g),T=A.c,D=A.n,C=O(M),I=C.c,U=C.n,q=new r(19),H=0;H<T.length;++H)++q[31&T[H]];for(H=0;H<I.length;++H)++q[31&I[H]];for(var j=Z(q,7),N=j.t,P=j.l,B=19;B>4&&!N[s[B-1]];--B);var Y,J,K,Q,R=p+5<<3,V=G(u,m)+G(h,b)+f,W=G(u,g)+G(h,M)+f+14+3*B+G(q,N)+2*q[16]+3*q[17]+7*q[18];if(c>=0&&R<=V&&R<=W)return L(n,v,t.subarray(c,c+p));if(F(n,v,1+(W<V)),v+=2,W<V){Y=y(g,x,0),J=g,K=y(M,S,0),Q=M;var X=y(N,P,0);for(F(n,v,D-257),F(n,v+5,U-1),F(n,v+10,B-4),v+=14,H=0;H<B;++H)F(n,v+3*H,N[s[H]]);v+=3*B;for(var $=[T,I],_=0;_<2;++_){var tt=$[_];for(H=0;H<tt.length;++H)F(n,v,X[rt=31&tt[H]]),v+=N[rt],rt>15&&(F(n,v,tt[H]>>5&127),v+=tt[H]>>12)}}else Y=w,J=m,K=z,Q=b;for(H=0;H<l;++H){var nt=a[H];if(nt>255){var rt;E(n,v,Y[257+(rt=nt>>18&31)]),v+=J[rt+257],rt>7&&(F(n,v,nt>>23&31),v+=i[rt]);var et=31&nt;E(n,v,K[et]),v+=Q[et],et>3&&(E(n,v,nt>>5&8191),v+=o[et])}else E(n,v,Y[nt]),v+=J[nt]}return E(n,v,Y[256]),v+J[256]},j=new e([65540,131080,131088,131104,262176,1048704,1048832,2114560,2117632]),N=new n(0),P=function(t,s,a,u,h,l){var c=l.z||t.length,v=new n(u+c+5*(1+Math.ceil(c/7e3))+h),d=v.subarray(u,v.length-h),g=l.l,y=7&(l.r||0);if(s){y&&(d[0]=l.r>>3);for(var m=j[s-1],b=m>>13,w=8191&m,x=(1<<a)-1,z=l.p||new r(32768),k=l.h||new r(x+1),M=Math.ceil(a/3),S=2*M,A=function(n){return(t[n]^t[n+1]<<M^t[n+2]<<S)&x},C=new e(25e3),I=new r(288),U=new r(32),F=0,E=0,Z=l.i||0,q=0,O=l.w||0,G=0;Z+2<c;++Z){var N=A(Z),P=32767&Z,B=k[N];if(z[P]=B,k[N]=P,O<=Z){var Y=c-Z;if((F>7e3||q>24576)&&(Y>423||!g)){y=H(t,d,0,C,I,U,E,q,G,Z-G,y),q=F=E=0,G=Z;for(var J=0;J<286;++J)I[J]=0;for(J=0;J<30;++J)U[J]=0}var K=2,Q=0,R=w,V=P-B&32767;if(Y>2&&N==A(Z-V))for(var W=Math.min(b,Y)-1,X=Math.min(32767,Z),$=Math.min(258,Y);V<=X&&--R&&P!=B;){if(t[Z+K]==t[Z+K-V]){for(var _=0;_<$&&t[Z+_]==t[Z+_-V];++_);if(_>K){if(K=_,Q=V,_>W)break;var tt=Math.min(V,_-2),nt=0;for(J=0;J<tt;++J){var rt=Z-V+J&32767,et=rt-z[rt]&32767;et>nt&&(nt=et,B=rt)}}}V+=(P=B)-(B=z[P])&32767}if(Q){C[q++]=268435456|f[K]<<18|p[Q];var it=31&f[K],ot=31&p[Q];E+=i[it]+o[ot],++I[257+it],++U[ot],O=Z+K,++F}else C[q++]=t[Z],++I[t[Z]]}}for(Z=Math.max(Z,O);Z<c;++Z)C[q++]=t[Z],++I[t[Z]];y=H(t,d,g,C,I,U,E,q,G,Z-G,y),g||(l.r=7&y|d[y/8|0]<<3,y-=7,l.h=k,l.p=z,l.i=Z,l.w=O)}else{for(Z=l.w||0;Z<c+g;Z+=65535){var st=Z+65535;st>=c&&(d[y/8|0]=g,st=c),y=L(d,y+1,t.subarray(Z,st))}l.i=c}return D(v,0,u+T(y)+h)},B=function(){for(var t=new Int32Array(256),n=0;n<256;++n){for(var r=n,e=9;--e;)r=(1&r&&-306674912)^r>>>1;t[n]=r}return t}(),Y=function(){var t=-1;return{p:function(n){for(var r=t,e=0;e<n.length;++e)r=B[255&r^n[e]]^r>>>8;t=r},d:function(){return~t}}},J=function(){var t=1,n=0;return{p:function(r){for(var e=t,i=n,o=0|r.length,s=0;s!=o;){for(var a=Math.min(s+2655,o);s<a;++s)i+=e+=r[s];e=(65535&e)+15*(e>>16),i=(65535&i)+15*(i>>16)}t=e,n=i},d:function(){return(255&(t%=65521))<<24|(65280&t)<<8|(255&(n%=65521))<<8|n>>8}}},K=function(t,r,e,i,o){if(!o&&(o={l:1},r.dictionary)){var s=r.dictionary.subarray(-32768),a=new n(s.length+t.length);a.set(s),a.set(t,s.length),t=a,o.w=s.length}return P(t,null==r.level?6:r.level,null==r.mem?o.l?Math.ceil(1.5*Math.max(8,Math.min(13,Math.log(t.length)))):20:12+r.mem,e,i,o)},Q=function(t,n){var r={};for(var e in t)r[e]=t[e];for(var e in n)r[e]=n[e];return r},R=function(t,n,r){for(var e=t(),i=""+t,o=i.slice(i.indexOf("[")+1,i.lastIndexOf("]")).replace(/\s+/g,"").split(","),s=0;s<e.length;++s){var a=e[s],u=o[s];if("function"==typeof a){n+=";"+u+"=";var h=""+a;if(a.prototype)if(-1!=h.indexOf("[native code]")){var f=h.indexOf(" ",8)+1;n+=h.slice(f,h.indexOf("(",f))}else for(var l in n+=h,a.prototype)n+=";"+u+".prototype."+l+"="+a.prototype[l];else n+=h}else r[u]=a}return n},V=[],W=function(t){var n=[];for(var r in t)t[r].buffer&&n.push((t[r]=new t[r].constructor(t[r])).buffer);return n},X=function(n,r,e,i){if(!V[e]){for(var o="",s={},a=n.length-1,u=0;u<a;++u)o=R(n[u],o,s);V[e]={c:R(n[a],o,s),e:s}}var h=Q({},V[e].e);return(0,t.default)(V[e].c+";onmessage=function(e){for(var k in e.data)self[k]=e.data[k];onmessage="+r+"}",e,h,W(h),i)},$=function(){return[n,r,e,i,o,s,h,c,x,k,v,C,y,M,S,A,T,D,I,U,Tt,it,ot]},_=function(){return[n,r,e,i,o,s,f,p,w,m,z,b,v,j,N,y,F,E,Z,q,O,G,L,H,T,D,P,K,kt,it]},tt=function(){return[pt,gt,ct,Y,B]},nt=function(){return[vt,dt]},rt=function(){return[yt,ct,J]},et=function(){return[mt]},it=function(t){return postMessage(t,[t.buffer])},ot=function(t){return t&&{out:t.size&&new n(t.size),dictionary:t.dictionary}},st=function(t,n,r,e,i,o){var s=X(r,e,i,(function(t,n){s.terminate(),o(t,n)}));return s.postMessage([t,n],n.consume?[t.buffer]:[]),function(){s.terminate()}},at=function(t){return t.ondata=function(t,n){return postMessage([t,n],[t.buffer])},function(n){n.data.length?(t.push(n.data[0],n.data[1]),postMessage([n.data[0].length])):t.flush()}},ut=function(t,n,r,e,i,o,s){var a,u=X(t,e,i,(function(t,r){t?(u.terminate(),n.ondata.call(n,t)):Array.isArray(r)?1==r.length?(n.queuedSize-=r[0],n.ondrain&&n.ondrain(r[0])):(r[1]&&u.terminate(),n.ondata.call(n,t,r[0],r[1])):s(r)}));u.postMessage(r),n.queuedSize=0,n.push=function(t,r){n.ondata||I(5),a&&n.ondata(I(4,0,1),null,!!r),n.queuedSize+=t.length,u.postMessage([t,a=r],[t.buffer])},n.terminate=function(){u.terminate()},o&&(n.flush=function(){u.postMessage([])})},ht=function(t,n){return t[n]|t[n+1]<<8},ft=function(t,n){return(t[n]|t[n+1]<<8|t[n+2]<<16|t[n+3]<<24)>>>0},lt=function(t,n){return ft(t,n)+4294967296*ft(t,n+4)},ct=function(t,n,r){for(;r;++n)t[n]=r,r>>>=8},pt=function(t,n){var r=n.filename;if(t[0]=31,t[1]=139,t[2]=8,t[8]=n.level<2?4:9==n.level?2:0,t[9]=3,0!=n.mtime&&ct(t,4,Math.floor(new Date(n.mtime||Date.now())/1e3)),r){t[3]=8;for(var e=0;e<=r.length;++e)t[e+10]=r.charCodeAt(e)}},vt=function(t){31==t[0]&&139==t[1]&&8==t[2]||I(6,"invalid gzip data");var n=t[3],r=10;4&n&&(r+=2+(t[10]|t[11]<<8));for(var e=(n>>3&1)+(n>>4&1);e>0;e-=!t[r++]);return r+(2&n)},dt=function(t){var n=t.length;return(t[n-4]|t[n-3]<<8|t[n-2]<<16|t[n-1]<<24)>>>0},gt=function(t){return 10+(t.filename?t.filename.length+1:0)},yt=function(t,n){var r=n.level,e=0==r?0:r<6?1:9==r?3:2;if(t[0]=120,t[1]=e<<6|(n.dictionary&&32),t[1]|=31-(t[0]<<8|t[1])%31,n.dictionary){var i=J();i.p(n.dictionary),ct(t,2,i.d())}},mt=function(t,n){return(8!=(15&t[0])||t[0]>>4>7||(t[0]<<8|t[1])%31)&&I(6,"invalid zlib data"),(t[1]>>5&1)==+!n&&I(6,"invalid zlib data: "+(32&t[1]?"need":"unexpected")+" dictionary"),2+(t[1]>>3&4)};function bt(t,n){return"function"==typeof t&&(n=t,t={}),this.ondata=n,t}var wt=function(){function t(t,r){if("function"==typeof t&&(r=t,t={}),this.ondata=r,this.o=t||{},this.s={l:0,i:32768,w:32768,z:32768},this.b=new n(98304),this.o.dictionary){var e=this.o.dictionary.subarray(-32768);this.b.set(e,32768-e.length),this.s.i=32768-e.length}}return t.prototype.p=function(t,n){this.ondata(K(t,this.o,0,0,this.s),n)},t.prototype.push=function(t,r){this.ondata||I(5),this.s.l&&I(4);var e=t.length+this.s.z;if(e>this.b.length){if(e>2*this.b.length-32768){var i=new n(-32768&e);i.set(this.b.subarray(0,this.s.z)),this.b=i}var o=this.b.length-this.s.z;this.b.set(t.subarray(0,o),this.s.z),this.s.z=this.b.length,this.p(this.b,!1),this.b.set(this.b.subarray(-32768)),this.b.set(t.subarray(o),32768),this.s.z=t.length-o+32768,this.s.i=32766,this.s.w=32768}else this.b.set(t,this.s.z),this.s.z+=t.length;this.s.l=1&r,(this.s.z>this.s.w+8191||r)&&(this.p(this.b,r||!1),this.s.w=this.s.i,this.s.i-=2)},t.prototype.flush=function(){this.ondata||I(5),this.s.l&&I(4),this.p(this.b,!1),this.s.w=this.s.i,this.s.i-=2},t}();_e.Deflate=wt;var xt=function(){return function(t,n){ut([_,function(){return[at,wt]}],this,bt.call(this,t,n),(function(t){var n=new wt(t.data);onmessage=at(n)}),6,1)}}();function zt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[_],(function(t){return it(kt(t.data[0],t.data[1]))}),0,r)}function kt(t,n){return K(t,n||{},0,0)}_e.AsyncDeflate=xt,_e.deflate=zt,_e.deflateSync=kt;var Mt=function(){function t(t,r){"function"==typeof t&&(r=t,t={}),this.ondata=r;var e=t&&t.dictionary&&t.dictionary.subarray(-32768);this.s={i:0,b:e?e.length:0},this.o=new n(32768),this.p=new n(0),e&&this.o.set(e)}return t.prototype.e=function(t){if(this.ondata||I(5),this.d&&I(4),this.p.length){if(t.length){var r=new n(this.p.length+t.length);r.set(this.p),r.set(t,this.p.length),this.p=r}}else this.p=t},t.prototype.c=function(t){this.s.i=+(this.d=t||!1);var n=this.s.b,r=U(this.p,this.s,this.o);this.ondata(D(r,n,this.s.b),this.d),this.o=D(r,this.s.b-32768),this.s.b=this.o.length,this.p=D(this.p,this.s.p/8|0),this.s.p&=7},t.prototype.push=function(t,n){this.e(t),this.c(n)},t}();_e.Inflate=Mt;var St=function(){return function(t,n){ut([$,function(){return[at,Mt]}],this,bt.call(this,t,n),(function(t){var n=new Mt(t.data);onmessage=at(n)}),7,0)}}();function At(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[$],(function(t){return it(Tt(t.data[0],ot(t.data[1])))}),1,r)}function Tt(t,n){return U(t,{i:2},n&&n.out,n&&n.dictionary)}_e.AsyncInflate=St,_e.inflate=At,_e.inflateSync=Tt;var Dt=function(){function t(t,n){this.c=Y(),this.l=0,this.v=1,wt.call(this,t,n)}return t.prototype.push=function(t,n){this.c.p(t),this.l+=t.length,wt.prototype.push.call(this,t,n)},t.prototype.p=function(t,n){var r=K(t,this.o,this.v&&gt(this.o),n&&8,this.s);this.v&&(pt(r,this.o),this.v=0),n&&(ct(r,r.length-8,this.c.d()),ct(r,r.length-4,this.l)),this.ondata(r,n)},t.prototype.flush=function(){wt.prototype.flush.call(this)},t}();_e.Gzip=Dt,_e.Compress=Dt;var Ct=function(){return function(t,n){ut([_,tt,function(){return[at,wt,Dt]}],this,bt.call(this,t,n),(function(t){var n=new Dt(t.data);onmessage=at(n)}),8,1)}}();function It(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[_,tt,function(){return[Ut]}],(function(t){return it(Ut(t.data[0],t.data[1]))}),2,r)}function Ut(t,n){n||(n={});var r=Y(),e=t.length;r.p(t);var i=K(t,n,gt(n),8),o=i.length;return pt(i,n),ct(i,o-8,r.d()),ct(i,o-4,e),i}_e.AsyncGzip=Ct,_e.AsyncCompress=Ct,_e.gzip=It,_e.compress=It,_e.gzipSync=Ut,_e.compressSync=Ut;var Ft=function(){function t(t,n){this.v=1,this.r=0,Mt.call(this,t,n)}return t.prototype.push=function(t,r){if(Mt.prototype.e.call(this,t),this.r+=t.length,this.v){var e=this.p.subarray(this.v-1),i=e.length>3?vt(e):4;if(i>e.length){if(!r)return}else this.v>1&&this.onmember&&this.onmember(this.r-e.length);this.p=e.subarray(i),this.v=0}Mt.prototype.c.call(this,r),!this.s.f||this.s.l||r||(this.v=T(this.s.p)+9,this.s={i:0},this.o=new n(0),this.push(new n(0),r))},t}();_e.Gunzip=Ft;var Et=function(){return function(t,n){var r=this;ut([$,nt,function(){return[at,Mt,Ft]}],this,bt.call(this,t,n),(function(t){var n=new Ft(t.data);n.onmember=function(t){return postMessage(t)},onmessage=at(n)}),9,0,(function(t){return r.onmember&&r.onmember(t)}))}}();function Zt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[$,nt,function(){return[qt]}],(function(t){return it(qt(t.data[0],t.data[1]))}),3,r)}function qt(t,r){var e=vt(t);return e+8>t.length&&I(6,"invalid gzip data"),U(t.subarray(e,-8),{i:2},r&&r.out||new n(dt(t)),r&&r.dictionary)}_e.AsyncGunzip=Et,_e.gunzip=Zt,_e.gunzipSync=qt;var Ot=function(){function t(t,n){this.c=J(),this.v=1,wt.call(this,t,n)}return t.prototype.push=function(t,n){this.c.p(t),wt.prototype.push.call(this,t,n)},t.prototype.p=function(t,n){var r=K(t,this.o,this.v&&(this.o.dictionary?6:2),n&&4,this.s);this.v&&(yt(r,this.o),this.v=0),n&&ct(r,r.length-4,this.c.d()),this.ondata(r,n)},t.prototype.flush=function(){wt.prototype.flush.call(this)},t}();_e.Zlib=Ot;var Gt=function(){return function(t,n){ut([_,rt,function(){return[at,wt,Ot]}],this,bt.call(this,t,n),(function(t){var n=new Ot(t.data);onmessage=at(n)}),10,1)}}();function Lt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[_,rt,function(){return[Ht]}],(function(t){return it(Ht(t.data[0],t.data[1]))}),4,r)}function Ht(t,n){n||(n={});var r=J();r.p(t);var e=K(t,n,n.dictionary?6:2,4);return yt(e,n),ct(e,e.length-4,r.d()),e}_e.AsyncZlib=Gt,_e.zlib=Lt,_e.zlibSync=Ht;var jt=function(){function t(t,n){Mt.call(this,t,n),this.v=t&&t.dictionary?2:1}return t.prototype.push=function(t,n){if(Mt.prototype.e.call(this,t),this.v){if(this.p.length<6&&!n)return;this.p=this.p.subarray(mt(this.p,this.v-1)),this.v=0}n&&(this.p.length<4&&I(6,"invalid zlib data"),this.p=this.p.subarray(0,-4)),Mt.prototype.c.call(this,n)},t}();_e.Unzlib=jt;var Nt=function(){return function(t,n){ut([$,et,function(){return[at,Mt,jt]}],this,bt.call(this,t,n),(function(t){var n=new jt(t.data);onmessage=at(n)}),11,0)}}();function Pt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[$,et,function(){return[Bt]}],(function(t){return it(Bt(t.data[0],ot(t.data[1])))}),5,r)}function Bt(t,n){return U(t.subarray(mt(t,n&&n.dictionary),-4),{i:2},n&&n.out,n&&n.dictionary)}_e.AsyncUnzlib=Nt,_e.unzlib=Pt,_e.unzlibSync=Bt;var Yt=function(){function t(t,n){this.o=bt.call(this,t,n)||{},this.G=Ft,this.I=Mt,this.Z=jt}return t.prototype.i=function(){var t=this;this.s.ondata=function(n,r){t.ondata(n,r)}},t.prototype.push=function(t,r){if(this.ondata||I(5),this.s)this.s.push(t,r);else{if(this.p&&this.p.length){var e=new n(this.p.length+t.length);e.set(this.p),e.set(t,this.p.length)}else this.p=t;this.p.length>2&&(this.s=31==this.p[0]&&139==this.p[1]&&8==this.p[2]?new this.G(this.o):8!=(15&this.p[0])||this.p[0]>>4>7||(this.p[0]<<8|this.p[1])%31?new this.I(this.o):new this.Z(this.o),this.i(),this.s.push(this.p,r),this.p=null)}},t}();_e.Decompress=Yt;var Jt=function(){function t(t,n){Yt.call(this,t,n),this.queuedSize=0,this.G=Et,this.I=St,this.Z=Nt}return t.prototype.i=function(){var t=this;this.s.ondata=function(n,r,e){t.ondata(n,r,e)},this.s.ondrain=function(n){t.queuedSize-=n,t.ondrain&&t.ondrain(n)}},t.prototype.push=function(t,n){this.queuedSize+=t.length,Yt.prototype.push.call(this,t,n)},t}();function Kt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),31==t[0]&&139==t[1]&&8==t[2]?Zt(t,n,r):8!=(15&t[0])||t[0]>>4>7||(t[0]<<8|t[1])%31?At(t,n,r):Pt(t,n,r)}function Qt(t,n){return 31==t[0]&&139==t[1]&&8==t[2]?qt(t,n):8!=(15&t[0])||t[0]>>4>7||(t[0]<<8|t[1])%31?Tt(t,n):Bt(t,n)}_e.AsyncDecompress=Jt,_e.decompress=Kt,_e.decompressSync=Qt;var Rt=function(t,r,e,i){for(var o in t){var s=t[o],a=r+o,u=i;Array.isArray(s)&&(u=Q(i,s[1]),s=s[0]),s instanceof n?e[a]=[s,u]:(e[a+="/"]=[new n(0),u],Rt(s,a,e,i))}},Vt="undefined"!=typeof TextEncoder&&new TextEncoder,Wt="undefined"!=typeof TextDecoder&&new TextDecoder,Xt=0;try{Wt.decode(N,{stream:!0}),Xt=1}catch(t){}var $t=function(t){for(var n="",r=0;;){var e=t[r++],i=(e>127)+(e>223)+(e>239);if(r+i>t.length)return{s:n,r:D(t,r-1)};i?3==i?(e=((15&e)<<18|(63&t[r++])<<12|(63&t[r++])<<6|63&t[r++])-65536,n+=String.fromCharCode(55296|e>>10,56320|1023&e)):n+=String.fromCharCode(1&i?(31&e)<<6|63&t[r++]:(15&e)<<12|(63&t[r++])<<6|63&t[r++]):n+=String.fromCharCode(e)}},_t=function(){function t(t){this.ondata=t,Xt?this.t=new TextDecoder:this.p=N}return t.prototype.push=function(t,r){if(this.ondata||I(5),r=!!r,this.t)return this.ondata(this.t.decode(t,{stream:!0}),r),void(r&&(this.t.decode().length&&I(8),this.t=null));this.p||I(4);var e=new n(this.p.length+t.length);e.set(this.p),e.set(t,this.p.length);var i=$t(e),o=i.s,s=i.r;r?(s.length&&I(8),this.p=null):this.p=s,this.ondata(o,r)},t}();_e.DecodeUTF8=_t;var tn=function(){function t(t){this.ondata=t}return t.prototype.push=function(t,n){this.ondata||I(5),this.d&&I(4),this.ondata(nn(t),this.d=n||!1)},t}();function nn(t,r){if(r){for(var e=new n(t.length),i=0;i<t.length;++i)e[i]=t.charCodeAt(i);return e}if(Vt)return Vt.encode(t);var o=t.length,s=new n(t.length+(t.length>>1)),a=0,u=function(t){s[a++]=t};for(i=0;i<o;++i){if(a+5>s.length){var h=new n(a+8+(o-i<<1));h.set(s),s=h}var f=t.charCodeAt(i);f<128||r?u(f):f<2048?(u(192|f>>6),u(128|63&f)):f>55295&&f<57344?(u(240|(f=65536+(1047552&f)|1023&t.charCodeAt(++i))>>18),u(128|f>>12&63),u(128|f>>6&63),u(128|63&f)):(u(224|f>>12),u(128|f>>6&63),u(128|63&f))}return D(s,0,a)}function rn(t,n){if(n){for(var r="",e=0;e<t.length;e+=16384)r+=String.fromCharCode.apply(null,t.subarray(e,e+16384));return r}if(Wt)return Wt.decode(t);var i=$t(t),o=i.s;return(r=i.r).length&&I(8),o}_e.EncodeUTF8=tn,_e.strToU8=nn,_e.strFromU8=rn;var en=function(t){return 1==t?3:t<6?2:9==t?1:0},on=function(t,n){return n+30+ht(t,n+26)+ht(t,n+28)},sn=function(t,n,r){var e=ht(t,n+28),i=rn(t.subarray(n+46,n+46+e),!(2048&ht(t,n+8))),o=n+46+e,s=ft(t,n+20),a=r&&4294967295==s?an(t,o):[s,ft(t,n+24),ft(t,n+42)],u=a[0],h=a[1],f=a[2];return[ht(t,n+10),u,h,i,o+ht(t,n+30)+ht(t,n+32),f]},an=function(t,n){for(;1!=ht(t,n);n+=4+ht(t,n+2));return[lt(t,n+12),lt(t,n+4),lt(t,n+20)]},un=function(t){var n=0;if(t)for(var r in t){var e=t[r].length;e>65535&&I(9),n+=e+4}return n},hn=function(t,n,r,e,i,o,s,a){var u=e.length,h=r.extra,f=a&&a.length,l=un(h);ct(t,n,null!=s?33639248:67324752),n+=4,null!=s&&(t[n++]=20,t[n++]=r.os),t[n]=20,n+=2,t[n++]=r.flag<<1|(o<0&&8),t[n++]=i&&8,t[n++]=255&r.compression,t[n++]=r.compression>>8;var c=new Date(null==r.mtime?Date.now():r.mtime),p=c.getFullYear()-1980;if((p<0||p>119)&&I(10),ct(t,n,p<<25|c.getMonth()+1<<21|c.getDate()<<16|c.getHours()<<11|c.getMinutes()<<5|c.getSeconds()>>1),n+=4,-1!=o&&(ct(t,n,r.crc),ct(t,n+4,o<0?-o-2:o),ct(t,n+8,r.size)),ct(t,n+12,u),ct(t,n+14,l),n+=16,null!=s&&(ct(t,n,f),ct(t,n+6,r.attrs),ct(t,n+10,s),n+=14),t.set(e,n),n+=u,l)for(var v in h){var d=h[v],g=d.length;ct(t,n,+v),ct(t,n+2,g),t.set(d,n+4),n+=4+g}return f&&(t.set(a,n),n+=f),n},fn=function(t,n,r,e,i){ct(t,n,101010256),ct(t,n+8,r),ct(t,n+10,r),ct(t,n+12,e),ct(t,n+16,i)},ln=function(){function t(t){this.filename=t,this.c=Y(),this.size=0,this.compression=0}return t.prototype.process=function(t,n){this.ondata(null,t,n)},t.prototype.push=function(t,n){this.ondata||I(5),this.c.p(t),this.size+=t.length,n&&(this.crc=this.c.d()),this.process(t,n||!1)},t}();_e.ZipPassThrough=ln;var cn=function(){function t(t,n){var r=this;n||(n={}),ln.call(this,t),this.d=new wt(n,(function(t,n){r.ondata(null,t,n)})),this.compression=8,this.flag=en(n.level)}return t.prototype.process=function(t,n){try{this.d.push(t,n)}catch(t){this.ondata(t,null,n)}},t.prototype.push=function(t,n){ln.prototype.push.call(this,t,n)},t}();_e.ZipDeflate=cn;var pn=function(){function t(t,n){var r=this;n||(n={}),ln.call(this,t),this.d=new xt(n,(function(t,n,e){r.ondata(t,n,e)})),this.compression=8,this.flag=en(n.level),this.terminate=this.d.terminate}return t.prototype.process=function(t,n){this.d.push(t,n)},t.prototype.push=function(t,n){ln.prototype.push.call(this,t,n)},t}();_e.AsyncZipDeflate=pn;var vn=function(){function t(t){this.ondata=t,this.u=[],this.d=1}return t.prototype.add=function(t){var r=this;if(this.ondata||I(5),2&this.d)this.ondata(I(4+8*(1&this.d),0,1),null,!1);else{var e=nn(t.filename),i=e.length,o=t.comment,s=o&&nn(o),a=i!=t.filename.length||s&&o.length!=s.length,u=i+un(t.extra)+30;i>65535&&this.ondata(I(11,0,1),null,!1);var h=new n(u);hn(h,0,t,e,a,-1);var f=[h],l=function(){for(var t=0,n=f;t<n.length;t++)r.ondata(null,n[t],!1);f=[]},c=this.d;this.d=0;var p=this.u.length,v=Q(t,{f:e,u:a,o:s,t:function(){t.terminate&&t.terminate()},r:function(){if(l(),c){var t=r.u[p+1];t?t.r():r.d=1}c=1}}),d=0;t.ondata=function(e,i,o){if(e)r.ondata(e,i,o),r.terminate();else if(d+=i.length,f.push(i),o){var s=new n(16);ct(s,0,134695760),ct(s,4,t.crc),ct(s,8,d),ct(s,12,t.size),f.push(s),v.c=d,v.b=u+d+16,v.crc=t.crc,v.size=t.size,c&&v.r(),c=1}else c&&l()},this.u.push(v)}},t.prototype.end=function(){var t=this;2&this.d?this.ondata(I(4+8*(1&this.d),0,1),null,!0):(this.d?this.e():this.u.push({r:function(){1&t.d&&(t.u.splice(-1,1),t.e())},t:function(){}}),this.d=3)},t.prototype.e=function(){for(var t=0,r=0,e=0,i=0,o=this.u;i<o.length;i++)e+=46+(h=o[i]).f.length+un(h.extra)+(h.o?h.o.length:0);for(var s=new n(e+22),a=0,u=this.u;a<u.length;a++){var h;hn(s,t,h=u[a],h.f,h.u,-h.c-2,r,h.o),t+=46+h.f.length+un(h.extra)+(h.o?h.o.length:0),r+=h.b}fn(s,t,this.u.length,e,r),this.ondata(null,s,!0),this.d=2},t.prototype.terminate=function(){for(var t=0,n=this.u;t<n.length;t++)n[t].t();this.d=2},t}();function dn(t,r,e){e||(e=r,r={}),"function"!=typeof e&&I(7);var i={};Rt(t,"",i,r);var o=Object.keys(i),s=o.length,a=0,u=0,h=s,f=Array(s),l=[],c=function(){for(var t=0;t<l.length;++t)l[t]()},p=function(t,n){xn((function(){e(t,n)}))};xn((function(){p=e}));var v=function(){var t=new n(u+22),r=a,e=u-a;u=0;for(var i=0;i<h;++i){var o=f[i];try{var s=o.c.length;hn(t,u,o,o.f,o.u,s);var l=30+o.f.length+un(o.extra),c=u+l;t.set(o.c,c),hn(t,a,o,o.f,o.u,s,u,o.m),a+=16+l+(o.m?o.m.length:0),u=c+s}catch(t){return p(t,null)}}fn(t,a,f.length,e,r),p(null,t)};s||v();for(var d=function(t){var n=o[t],r=i[n],e=r[0],h=r[1],d=Y(),g=e.length;d.p(e);var y=nn(n),m=y.length,b=h.comment,w=b&&nn(b),x=w&&w.length,z=un(h.extra),k=0==h.level?0:8,M=function(r,e){if(r)c(),p(r,null);else{var i=e.length;f[t]=Q(h,{size:g,crc:d.d(),c:e,f:y,m:w,u:m!=n.length||w&&b.length!=x,compression:k}),a+=30+m+z+i,u+=76+2*(m+z)+(x||0)+i,--s||v()}};if(m>65535&&M(I(11,0,1),null),k)if(g<16e4)try{M(null,kt(e,h))}catch(t){M(t,null)}else l.push(zt(e,h,M));else M(null,e)},g=0;g<h;++g)d(g);return c}function gn(t,r){r||(r={});var e={},i=[];Rt(t,"",e,r);var o=0,s=0;for(var a in e){var u=e[a],h=u[0],f=u[1],l=0==f.level?0:8,c=(M=nn(a)).length,p=f.comment,v=p&&nn(p),d=v&&v.length,g=un(f.extra);c>65535&&I(11);var y=l?kt(h,f):h,m=y.length,b=Y();b.p(h),i.push(Q(f,{size:h.length,crc:b.d(),c:y,f:M,m:v,u:c!=a.length||v&&p.length!=d,o:o,compression:l})),o+=30+c+g+m,s+=76+2*(c+g)+(d||0)+m}for(var w=new n(s+22),x=o,z=s-o,k=0;k<i.length;++k){var M;hn(w,(M=i[k]).o,M,M.f,M.u,M.c.length);var S=30+M.f.length+un(M.extra);w.set(M.c,M.o+S),hn(w,o,M,M.f,M.u,M.c.length,M.o,M.m),o+=16+S+(M.m?M.m.length:0)}return fn(w,o,i.length,z,x),w}_e.Zip=vn,_e.zip=dn,_e.zipSync=gn;var yn=function(){function t(){}return t.prototype.push=function(t,n){this.ondata(null,t,n)},t.compression=0,t}();_e.UnzipPassThrough=yn;var mn=function(){function t(){var t=this;this.i=new Mt((function(n,r){t.ondata(null,n,r)}))}return t.prototype.push=function(t,n){try{this.i.push(t,n)}catch(t){this.ondata(t,null,n)}},t.compression=8,t}();_e.UnzipInflate=mn;var bn=function(){function t(t,n){var r=this;n<32e4?this.i=new Mt((function(t,n){r.ondata(null,t,n)})):(this.i=new St((function(t,n,e){r.ondata(t,n,e)})),this.terminate=this.i.terminate)}return t.prototype.push=function(t,n){this.i.terminate&&(t=D(t,0)),this.i.push(t,n)},t.compression=8,t}();_e.AsyncUnzipInflate=bn;var wn=function(){function t(t){this.onfile=t,this.k=[],this.o={0:yn},this.p=N}return t.prototype.push=function(t,r){var e=this;if(this.onfile||I(5),this.p||I(4),this.c>0){var i=Math.min(this.c,t.length),o=t.subarray(0,i);if(this.c-=i,this.d?this.d.push(o,!this.c):this.k[0].push(o),(t=t.subarray(i)).length)return this.push(t,r)}else{var s=0,a=0,u=void 0,h=void 0;this.p.length?t.length?((h=new n(this.p.length+t.length)).set(this.p),h.set(t,this.p.length)):h=this.p:h=t;for(var f=h.length,l=this.c,c=l&&this.d,p=function(){var t,n=ft(h,a);if(67324752==n){s=1,u=a,v.d=null,v.c=0;var r=ht(h,a+6),i=ht(h,a+8),o=2048&r,c=8&r,p=ht(h,a+26),d=ht(h,a+28);if(f>a+30+p+d){var g=[];v.k.unshift(g),s=2;var y,m=ft(h,a+18),b=ft(h,a+22),w=rn(h.subarray(a+30,a+=30+p),!o);4294967295==m?(t=c?[-2]:an(h,a),m=t[0],b=t[1]):c&&(m=-1),a+=d,v.c=m;var x={name:w,compression:i,start:function(){if(x.ondata||I(5),m){var t=e.o[i];t||x.ondata(I(14,"unknown compression type "+i,1),null,!1),(y=m<0?new t(w):new t(w,m,b)).ondata=function(t,n,r){x.ondata(t,n,r)};for(var n=0,r=g;n<r.length;n++)y.push(r[n],!1);e.k[0]==g&&e.c?e.d=y:y.push(N,!0)}else x.ondata(null,N,!0)},terminate:function(){y&&y.terminate&&y.terminate()}};m>=0&&(x.size=m,x.originalSize=b),v.onfile(x)}return"break"}if(l){if(134695760==n)return u=a+=12+(-2==l&&8),s=3,v.c=0,"break";if(33639248==n)return u=a-=4,s=3,v.c=0,"break"}},v=this;a<f-4&&"break"!==p();++a);if(this.p=N,l<0){var d=h.subarray(0,s?u-12-(-2==l&&8)-(134695760==ft(h,u-16)&&4):a);c?c.push(d,!!s):this.k[+(2==s)].push(d)}if(2&s)return this.push(h.subarray(a),r);this.p=h.subarray(a)}r&&(this.c&&I(13),this.p=null)},t.prototype.register=function(t){this.o[t.compression]=t},t}();_e.Unzip=wn;var xn="function"==typeof queueMicrotask?queueMicrotask:"function"==typeof setTimeout?setTimeout:function(t){t()};function zn(t,r,e){e||(e=r,r={}),"function"!=typeof e&&I(7);var i=[],o=function(){for(var t=0;t<i.length;++t)i[t]()},s={},a=function(t,n){xn((function(){e(t,n)}))};xn((function(){a=e}));for(var u=t.length-22;101010256!=ft(t,u);--u)if(!u||t.length-u>65558)return a(I(13,0,1),null),o;var h=ht(t,u+8);if(h){var f=h,l=ft(t,u+16),c=4294967295==l||65535==f;if(c){var p=ft(t,u-12);(c=101075792==ft(t,p))&&(f=h=ft(t,p+32),l=ft(t,p+48))}for(var v=r&&r.filter,d=function(r){var e=sn(t,l,c),u=e[0],f=e[1],p=e[2],d=e[3],g=e[4],y=on(t,e[5]);l=g;var m=function(t,n){t?(o(),a(t,null)):(n&&(s[d]=n),--h||a(null,s))};if(!v||v({name:d,size:f,originalSize:p,compression:u}))if(u)if(8==u){var b=t.subarray(y,y+f);if(p<524288||f>.8*p)try{m(null,Tt(b,{out:new n(p)}))}catch(t){m(t,null)}else i.push(At(b,{size:p},m))}else m(I(14,"unknown compression type "+u,1),null);else m(null,D(t,y,y+f));else m(null,null)},g=0;g<f;++g)d()}else a(null,{});return o}function kn(t,r){for(var e={},i=t.length-22;101010256!=ft(t,i);--i)(!i||t.length-i>65558)&&I(13);var o=ht(t,i+8);if(!o)return{};var s=ft(t,i+16),a=4294967295==s||65535==o;if(a){var u=ft(t,i-12);(a=101075792==ft(t,u))&&(o=ft(t,u+32),s=ft(t,u+48))}for(var h=r&&r.filter,f=0;f<o;++f){var l=sn(t,s,a),c=l[0],p=l[1],v=l[2],d=l[3],g=l[4],y=on(t,l[5]);s=g,h&&!h({name:d,size:p,originalSize:v,compression:c})||(c?8==c?e[d]=Tt(t.subarray(y,y+p),{out:new n(v)}):I(14,"unknown compression type "+c):e[d]=D(t,y,y+p))}return e}_e.unzip=zn,_e.unzipSync=kn;return _e});
+  </script>
+  <!--
+    UPNG.js, MIT License: https://github.com/photopea/UPNG.js
+    Copyright (c) 2017 Photopea
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to inclusion of this notice. THE SOFTWARE IS
+    PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+  -->
+  <script>
+    window.pako = {
+      deflate(data, options) {
+        return window.fflate.zlibSync(data, { level: options && options.level != null ? options.level : 6 });
+      },
+      inflate(data) {
+        return window.fflate.unzlibSync(data);
+      }
+    };
+  </script>
+  <script>
+var UPNG = (function() {
+	
+	var _bin = {
+		nextZero   : function(data,p)  {  while(data[p]!=0) p++;  return p;  },
+		readUshort : function(buff,p)  {  return (buff[p]<< 8) | buff[p+1];  },
+		writeUshort: function(buff,p,n){  buff[p] = (n>>8)&255;  buff[p+1] = n&255;  },
+		readUint   : function(buff,p)  {  return (buff[p]*(256*256*256)) + ((buff[p+1]<<16) | (buff[p+2]<< 8) | buff[p+3]);  },
+		writeUint  : function(buff,p,n){  buff[p]=(n>>24)&255;  buff[p+1]=(n>>16)&255;  buff[p+2]=(n>>8)&255;  buff[p+3]=n&255;  },
+		readASCII  : function(buff,p,l){  var s = "";  for(var i=0; i<l; i++) s += String.fromCharCode(buff[p+i]);  return s;    },
+		writeASCII : function(data,p,s){  for(var i=0; i<s.length; i++) data[p+i] = s.charCodeAt(i);  },
+		readBytes  : function(buff,p,l){  var arr = [];   for(var i=0; i<l; i++) arr.push(buff[p+i]);   return arr;  },
+		pad : function(n) { return n.length < 2 ? "0" + n : n; },
+		readUTF8 : function(buff, p, l) {
+			var s = "", ns;
+			for(var i=0; i<l; i++) s += "%" + _bin.pad(buff[p+i].toString(16));
+			try {  ns = decodeURIComponent(s); }
+			catch(e) {  return _bin.readASCII(buff, p, l);  }
+			return  ns;
+		}
+	}
+
+	function toRGBA8(out)
+	{
+		var w = out.width, h = out.height;
+		if(out.tabs.acTL==null) return [decodeImage(out.data, w, h, out).buffer];
+		
+		var frms = [];
+		if(out.frames[0].data==null) out.frames[0].data = out.data;
+		
+		var len = w*h*4, img = new Uint8Array(len), empty = new Uint8Array(len), prev=new Uint8Array(len);
+		for(var i=0; i<out.frames.length; i++)
+		{
+			var frm = out.frames[i];
+			var fx=frm.rect.x, fy=frm.rect.y, fw = frm.rect.width, fh = frm.rect.height;
+			var fdata = decodeImage(frm.data, fw,fh, out);
+			
+			if(i!=0) for(var j=0; j<len; j++) prev[j]=img[j];
+			
+			if     (frm.blend==0) _copyTile(fdata, fw, fh, img, w, h, fx, fy, 0);
+			else if(frm.blend==1) _copyTile(fdata, fw, fh, img, w, h, fx, fy, 1);
+			
+			frms.push(img.buffer.slice(0));
+			
+			if     (frm.dispose==0) {}
+			else if(frm.dispose==1) _copyTile(empty, fw, fh, img, w, h, fx, fy, 0);
+			else if(frm.dispose==2) for(var j=0; j<len; j++) img[j]=prev[j];
+		}
+		return frms;
+	}
+	function decodeImage(data, w, h, out)
+	{
+		var area = w*h, bpp = _getBPP(out);
+		var bpl = Math.ceil(w*bpp/8);	// bytes per line
+
+		var bf = new Uint8Array(area*4), bf32 = new Uint32Array(bf.buffer);
+		var ctype = out.ctype, depth = out.depth;
+		var rs = _bin.readUshort;
+		
+		//console.log(ctype, depth);
+		var time = Date.now();
+
+		if     (ctype==6) { // RGB + alpha
+			var qarea = area<<2;
+			if(depth== 8) for(var i=0; i<qarea;i+=4) {  bf[i] = data[i];  bf[i+1] = data[i+1];  bf[i+2] = data[i+2];  bf[i+3] = data[i+3]; }
+			if(depth==16) for(var i=0; i<qarea;i++ ) {  bf[i] = data[i<<1];  }
+		}
+		else if(ctype==2) {	// RGB
+			var ts=out.tabs["tRNS"];
+			if(ts==null) {
+				if(depth== 8) for(var i=0; i<area; i++) {  var ti=i*3;  bf32[i] = (255<<24)|(data[ti+2]<<16)|(data[ti+1]<<8)|data[ti];  }
+				if(depth==16) for(var i=0; i<area; i++) {  var ti=i*6;  bf32[i] = (255<<24)|(data[ti+4]<<16)|(data[ti+2]<<8)|data[ti];  }
+			}
+			else {  var tr=ts[0], tg=ts[1], tb=ts[2];
+				if(depth== 8) for(var i=0; i<area; i++) {  var qi=i<<2, ti=i*3;  bf32[i] = (255<<24)|(data[ti+2]<<16)|(data[ti+1]<<8)|data[ti];
+					if(data[ti]   ==tr && data[ti+1]   ==tg && data[ti+2]   ==tb) bf[qi+3] = 0;  }
+				if(depth==16) for(var i=0; i<area; i++) {  var qi=i<<2, ti=i*6;  bf32[i] = (255<<24)|(data[ti+4]<<16)|(data[ti+2]<<8)|data[ti];
+					if(rs(data,ti)==tr && rs(data,ti+2)==tg && rs(data,ti+4)==tb) bf[qi+3] = 0;  }
+			}
+		}
+		else if(ctype==3) {	// palette
+			var p=out.tabs["PLTE"], ap=out.tabs["tRNS"], tl=ap?ap.length:0;
+			//console.log(p, ap);
+			if(depth==1) for(var y=0; y<h; y++) {  var s0 = y*bpl, t0 = y*w;
+				for(var i=0; i<w; i++) { var qi=(t0+i)<<2, j=((data[s0+(i>>3)]>>(7-((i&7)<<0)))& 1), cj=3*j;  bf[qi]=p[cj];  bf[qi+1]=p[cj+1];  bf[qi+2]=p[cj+2];  bf[qi+3]=(j<tl)?ap[j]:255;  }
+			}
+			if(depth==2) for(var y=0; y<h; y++) {  var s0 = y*bpl, t0 = y*w;
+				for(var i=0; i<w; i++) { var qi=(t0+i)<<2, j=((data[s0+(i>>2)]>>(6-((i&3)<<1)))& 3), cj=3*j;  bf[qi]=p[cj];  bf[qi+1]=p[cj+1];  bf[qi+2]=p[cj+2];  bf[qi+3]=(j<tl)?ap[j]:255;  }
+			}
+			if(depth==4) for(var y=0; y<h; y++) {  var s0 = y*bpl, t0 = y*w;
+				for(var i=0; i<w; i++) { var qi=(t0+i)<<2, j=((data[s0+(i>>1)]>>(4-((i&1)<<2)))&15), cj=3*j;  bf[qi]=p[cj];  bf[qi+1]=p[cj+1];  bf[qi+2]=p[cj+2];  bf[qi+3]=(j<tl)?ap[j]:255;  }
+			}
+			if(depth==8) for(var i=0; i<area; i++ ) {  var qi=i<<2, j=data[i]                      , cj=3*j;  bf[qi]=p[cj];  bf[qi+1]=p[cj+1];  bf[qi+2]=p[cj+2];  bf[qi+3]=(j<tl)?ap[j]:255;  }
+		}
+		else if(ctype==4) {	// gray + alpha
+			if(depth== 8)  for(var i=0; i<area; i++) {  var qi=i<<2, di=i<<1, gr=data[di];  bf[qi]=gr;  bf[qi+1]=gr;  bf[qi+2]=gr;  bf[qi+3]=data[di+1];  }
+			if(depth==16)  for(var i=0; i<area; i++) {  var qi=i<<2, di=i<<2, gr=data[di];  bf[qi]=gr;  bf[qi+1]=gr;  bf[qi+2]=gr;  bf[qi+3]=data[di+2];  }
+		}
+		else if(ctype==0) {	// gray
+			var tr = out.tabs["tRNS"] ? out.tabs["tRNS"] : -1;
+			for(var y=0; y<h; y++) {
+				var off = y*bpl, to = y*w;
+				if     (depth== 1) for(var x=0; x<w; x++) {  var gr=255*((data[off+(x>>>3)]>>>(7 -((x&7)   )))& 1), al=(gr==tr*255)?0:255;  bf32[to+x]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+				else if(depth== 2) for(var x=0; x<w; x++) {  var gr= 85*((data[off+(x>>>2)]>>>(6 -((x&3)<<1)))& 3), al=(gr==tr* 85)?0:255;  bf32[to+x]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+				else if(depth== 4) for(var x=0; x<w; x++) {  var gr= 17*((data[off+(x>>>1)]>>>(4 -((x&1)<<2)))&15), al=(gr==tr* 17)?0:255;  bf32[to+x]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+				else if(depth== 8) for(var x=0; x<w; x++) {  var gr=data[off+     x], al=(gr                 ==tr)?0:255;  bf32[to+x]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+				else if(depth==16) for(var x=0; x<w; x++) {  var gr=data[off+(x<<1)], al=(rs(data,off+(x<<1))==tr)?0:255;  bf32[to+x]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+			}
+		}
+		//console.log(Date.now()-time);
+		return bf;
+	}
+
+
+
+	function decode(buff)
+	{
+		var data = new Uint8Array(buff), offset = 8, bin = _bin, rUs = bin.readUshort, rUi = bin.readUint;
+		var out = {tabs:{}, frames:[]};
+		var dd = new Uint8Array(data.length), doff = 0;	 // put all IDAT data into it
+		var fd, foff = 0;	// frames
+		
+		var mgck = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+		for(var i=0; i<8; i++) if(data[i]!=mgck[i]) throw "The input is not a PNG file!";
+
+		while(offset<data.length)
+		{
+			var len  = bin.readUint(data, offset);  offset += 4;
+			var type = bin.readASCII(data, offset, 4);  offset += 4;
+			//console.log(type,len);
+			
+			if     (type=="IHDR")  {  _IHDR(data, offset, out);  }
+			else if(type=="iCCP")  {
+				var off = offset;  while(data[off]!=0) off++;
+				var nam = bin.readASCII(data,offset,off-offset);
+				var cpr = data[off+1];
+				var fil = data.slice(off+2,offset+len);
+				var res = null;
+				try { res = _inflate(fil); } catch(e) {  res = inflateRaw(fil);  }
+				out.tabs[type] = res;
+			}
+			else if(type=="CgBI")  {  out.tabs[type] = data.slice(offset,offset+4);  }
+			else if(type=="IDAT") {
+				for(var i=0; i<len; i++) dd[doff+i] = data[offset+i];
+				doff += len;
+			}
+			else if(type=="acTL")  {
+				out.tabs[type] = {  num_frames:rUi(data, offset), num_plays:rUi(data, offset+4)  };
+				fd = new Uint8Array(data.length);
+			}
+			else if(type=="fcTL")  {
+				if(foff!=0) {  var fr = out.frames[out.frames.length-1];
+					fr.data = _decompress(out, fd.slice(0,foff), fr.rect.width, fr.rect.height);  foff=0;
+				}
+				var rct = {x:rUi(data, offset+12),y:rUi(data, offset+16),width:rUi(data, offset+4),height:rUi(data, offset+8)};
+				var del = rUs(data, offset+22);  del = rUs(data, offset+20) / (del==0?100:del);
+				var frm = {rect:rct, delay:Math.round(del*1000), dispose:data[offset+24], blend:data[offset+25]};
+				//console.log(frm);
+				out.frames.push(frm);
+			}
+			else if(type=="fdAT") {
+				for(var i=0; i<len-4; i++) fd[foff+i] = data[offset+i+4];
+				foff += len-4;
+			}
+			else if(type=="pHYs") {
+				out.tabs[type] = [bin.readUint(data, offset), bin.readUint(data, offset+4), data[offset+8]];
+			}
+			else if(type=="cHRM") {
+				out.tabs[type] = [];
+				for(var i=0; i<8; i++) out.tabs[type].push(bin.readUint(data, offset+i*4));
+			}
+			else if(type=="tEXt" || type=="zTXt") {
+				if(out.tabs[type]==null) out.tabs[type] = {};
+				var nz = bin.nextZero(data, offset);
+				var keyw = bin.readASCII(data, offset, nz-offset);
+				var text, tl=offset+len-nz-1;
+				if(type=="tEXt") text = bin.readASCII(data, nz+1, tl);
+				else {
+					var bfr = _inflate(data.slice(nz+2,nz+2+tl));
+					text = bin.readUTF8(bfr,0,bfr.length);
+				}
+				out.tabs[type][keyw] = text;
+			}
+			else if(type=="iTXt") {
+				if(out.tabs[type]==null) out.tabs[type] = {};
+				var nz = 0, off = offset;
+				nz = bin.nextZero(data, off);
+				var keyw = bin.readASCII(data, off, nz-off);  off = nz + 1;
+				var cflag = data[off], cmeth = data[off+1];  off+=2;
+				nz = bin.nextZero(data, off);
+				var ltag = bin.readASCII(data, off, nz-off);  off = nz + 1;
+				nz = bin.nextZero(data, off);
+				var tkeyw = bin.readUTF8(data, off, nz-off);  off = nz + 1;
+				var text, tl=len-(off-offset);
+				if(cflag==0) text  = bin.readUTF8(data, off, tl);
+				else {
+					var bfr = _inflate(data.slice(off,off+tl));
+					text = bin.readUTF8(bfr,0,bfr.length);
+				}
+				out.tabs[type][keyw] = text;
+			}
+			else if(type=="PLTE") {
+				out.tabs[type] = bin.readBytes(data, offset, len);
+			}
+			else if(type=="hIST") {
+				var pl = out.tabs["PLTE"].length/3;
+				out.tabs[type] = [];  for(var i=0; i<pl; i++) out.tabs[type].push(rUs(data, offset+i*2));
+			}
+			else if(type=="tRNS") {
+				if     (out.ctype==3) out.tabs[type] = bin.readBytes(data, offset, len);
+				else if(out.ctype==0) out.tabs[type] = rUs(data, offset);
+				else if(out.ctype==2) out.tabs[type] = [ rUs(data,offset),rUs(data,offset+2),rUs(data,offset+4) ];
+				//else console.log("tRNS for unsupported color type",out.ctype, len);
+			}
+			else if(type=="gAMA") out.tabs[type] = bin.readUint(data, offset)/100000;
+			else if(type=="sRGB") out.tabs[type] = data[offset];
+			else if(type=="bKGD")
+			{
+				if     (out.ctype==0 || out.ctype==4) out.tabs[type] = [rUs(data, offset)];
+				else if(out.ctype==2 || out.ctype==6) out.tabs[type] = [rUs(data, offset), rUs(data, offset+2), rUs(data, offset+4)];
+				else if(out.ctype==3) out.tabs[type] = data[offset];
+			}
+			else if(type=="IEND") {
+				break;
+			}
+			//else {  console.log("unknown chunk type", type, len);  out.tabs[type]=data.slice(offset,offset+len);  }
+			offset += len;
+			var crc = bin.readUint(data, offset);  offset += 4;
+		}
+		if(foff!=0) {  var fr = out.frames[out.frames.length-1];
+			fr.data = _decompress(out, fd.slice(0,foff), fr.rect.width, fr.rect.height);
+		}	
+		out.data = _decompress(out, dd, out.width, out.height);
+		
+		delete out.compress;  delete out.interlace;  delete out.filter;
+		return out;
+	}
+
+	function _decompress(out, dd, w, h) {
+		var time = Date.now();
+		var bpp = _getBPP(out), bpl = Math.ceil(w*bpp/8), buff = new Uint8Array((bpl+1+out.interlace)*h);
+		if(out.tabs["CgBI"]) dd = inflateRaw(dd,buff);
+		else                 dd = _inflate(dd,buff);
+		//console.log(dd.length, buff.length);
+		//console.log(Date.now()-time);
+
+		var time=Date.now();
+		if     (out.interlace==0) dd = _filterZero(dd, out, 0, w, h);
+		else if(out.interlace==1) dd = _readInterlace(dd, out);
+		//console.log(Date.now()-time);
+		return dd;
+	}
+
+	function _inflate(data, buff) {  var out=inflateRaw(new Uint8Array(data.buffer, 2,data.length-6),buff);  return out;  }
+	
+	var inflateRaw=function(){var D=function(){var o=Uint16Array,j=Uint32Array;return{m:new o(16),v:new o(16),
+	d:[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15],o:[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258,999,999,999],
+	z:[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0,0],B:new o(32),
+	p:[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,65535,65535],
+	w:[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,0,0],h:new j(32),g:new o(512),s:[],A:new o(32),t:[],k:new o(32768),c:[],
+	a:[],n:new o(32768),e:[],C:new o(512),b:[],i:new o(1<<15),r:new j(286),f:new j(30),l:new j(19),u:new j(15e3),q:new o(1<<16),j:new o(1<<15)}}();
+function C(o,j){var I=o.length,A,r,i,y,G,f=D.v;for(var y=0;y<=j;y++)f[y]=0;for(y=1;y<I;y+=2)f[o[y]]++;
+var a=D.m;A=0;f[0]=0;for(r=1;r<=j;r++){A=A+f[r-1]<<1;a[r]=A}for(i=0;i<I;i+=2){G=o[i+1];if(G!=0){o[i]=a[G];
+a[G]++}}}function t(o,j,I){var A=o.length,r=D.i;for(var i=0;i<A;i+=2)if(o[i+1]!=0){var y=i>>1,G=o[i+1],f=y<<4|G,a=j-G,k=o[i]<<a,N=k+(1<<a);
+while(k!=N){var x=r[k]>>>15-j;I[x]=f;k++}}}function g(o,j){var I=D.i,A=15-j;for(var r=0;r<o.length;r+=2){var i=o[r]<<j-o[r+1];
+o[r]=I[i]>>>A}}(function(){var o=1<<15;for(var j=0;j<o;j++){var I=j;I=(I&2863311530)>>>1|(I&1431655765)<<1;
+I=(I&3435973836)>>>2|(I&858993459)<<2;I=(I&4042322160)>>>4|(I&252645135)<<4;I=(I&4278255360)>>>8|(I&16711935)<<8;
+D.i[j]=(I>>>16|I<<16)>>>17}function A(r,i,y){while(i--!=0)r.push(0,y)}for(var j=0;j<32;j++){D.B[j]=D.o[j]<<3|D.z[j];
+D.h[j]=D.p[j]<<4|D.w[j]}A(D.s,144,8);A(D.s,255-143,9);A(D.s,279-255,7);A(D.s,287-279,8);C(D.s,9);t(D.s,9,D.g);
+g(D.s,9);A(D.t,32,5);C(D.t,5);t(D.t,5,D.A);g(D.t,5);A(D.b,19,0);A(D.c,286,0);A(D.e,30,0);A(D.a,320,0)}());
+function F(o,j,I){return(o[j>>>3]|o[(j>>>3)+1]<<8)>>>(j&7)&(1<<I)-1}function s(o,j,I){return(o[j>>>3]|o[(j>>>3)+1]<<8|o[(j>>>3)+2]<<16)>>>(j&7)&(1<<I)-1}
+function w(o,j){return(o[j>>>3]|o[(j>>>3)+1]<<8|o[(j>>>3)+2]<<16)>>>(j&7)}function b(o,j){return(o[j>>>3]|o[(j>>>3)+1]<<8|o[(j>>>3)+2]<<16|o[(j>>>3)+3]<<24)>>>(j&7)}
+function v(o,j){var I=Uint8Array,r=0,i=0,y=0,G=0,f=0,a=0,k=0,N=0,x=0,P,J;
+if(o[0]==3&&o[1]==0)return j?j:new I(0);var A=j==null;if(A)j=new I(o.length>>>2<<3);while(r==0){r=s(o,x,1);
+i=s(o,x+1,2);x+=3;if(i==0){if((x&7)!=0)x+=8-(x&7);var K=(x>>>3)+4,m=o[K-4]|o[K-3]<<8;if(A)j=H(j,N+m);
+j.set(new I(o.buffer,o.byteOffset+K,m),N);x=K+m<<3;N+=m;continue}if(A)j=H(j,N+(1<<17));if(i==1){P=D.g;
+J=D.A;a=(1<<9)-1;k=(1<<5)-1}if(i==2){y=F(o,x,5)+257;G=F(o,x+5,5)+1;f=F(o,x+10,4)+4;x+=14;var O=x,Q=1;
+for(var p=0;p<38;p+=2){D.b[p]=0;D.b[p+1]=0}for(var p=0;p<f;p++){var l=F(o,x+p*3,3);D.b[(D.d[p]<<1)+1]=l;
+if(l>Q)Q=l}x+=3*f;C(D.b,Q);t(D.b,Q,D.C);P=D.k;J=D.n;x=B(D.C,(1<<Q)-1,y+G,o,x,D.a);var u=d(D.a,0,y,D.c);
+a=(1<<u)-1;var n=d(D.a,y,G,D.e);k=(1<<n)-1;C(D.c,u);t(D.c,u,P);C(D.e,n);t(D.e,n,J)}while(!0){var h=P[w(o,x)&a];
+x+=h&15;var L=h>>>4;if(L>>>8==0){j[N++]=L}else if(L==256){break}else{var M=N+L-254;if(L>264){var z=D.B[L-257];
+M=N+(z>>>3)+F(o,x,z&7);x+=z&7}var e=J[w(o,x)&k];x+=e&15;var E=e>>>4,c=D.h[E],q=(c>>>4)+s(o,x,c&15);x+=c&15;
+if(A)j=H(j,N+(1<<17));while(N<M){j[N]=j[N++-q];j[N]=j[N++-q];j[N]=j[N++-q];j[N]=j[N++-q]}N=M}}}return j.length==N?j:j.slice(0,N)}function H(o,j){var I=o.length;
+if(j<=I)return o;var A=new Uint8Array(Math.max(I<<1,j));A.set(o,0);return A}function B(o,j,I,A,r,i){var y=0;
+while(y<I){var G=o[w(A,r)&j];r+=G&15;var f=G>>>4;if(f<=15){i[y]=f;y++}else{var a=0,k=0;if(f==16){k=3+F(A,r,2);
+r+=2;a=i[y-1]}else if(f==17){k=3+F(A,r,3);r+=3}else if(f==18){k=11+F(A,r,7);r+=7}var N=y+k;while(y<N){i[y]=a;
+y++}}}return r}function d(o,j,I,A){var r=0,i=0,y=A.length>>>1;while(i<I){var G=o[i+j];A[i<<1]=0;A[(i<<1)+1]=G;
+if(G>r)r=G;i++}while(i<y){A[i<<1]=0;A[(i<<1)+1]=0;i++}return r}return v}();
+
+
+	function _readInterlace(data, out)
+	{
+		var w = out.width, h = out.height;
+		var bpp = _getBPP(out), cbpp = bpp>>3, bpl = Math.ceil(w*bpp/8);
+		var img = new Uint8Array( h * bpl );
+		var di = 0;
+
+		var starting_row  = [ 0, 0, 4, 0, 2, 0, 1 ];
+		var starting_col  = [ 0, 4, 0, 2, 0, 1, 0 ];
+		var row_increment = [ 8, 8, 8, 4, 4, 2, 2 ];
+		var col_increment = [ 8, 8, 4, 4, 2, 2, 1 ];
+
+		var pass=0;
+		while(pass<7)
+		{
+			var ri = row_increment[pass], ci = col_increment[pass];
+			var sw = 0, sh = 0;
+			var cr = starting_row[pass];  while(cr<h) {  cr+=ri;  sh++;  }
+			var cc = starting_col[pass];  while(cc<w) {  cc+=ci;  sw++;  }
+			var bpll = Math.ceil(sw*bpp/8);
+			_filterZero(data, out, di, sw, sh);
+
+			var y=0, row = starting_row[pass];
+			while(row<h)
+			{
+				var col = starting_col[pass];
+				var cdi = (di+y*bpll)<<3;
+
+				while(col<w)
+				{
+					if(bpp==1) {
+						var val = data[cdi>>3];  val = (val>>(7-(cdi&7)))&1;
+						img[row*bpl + (col>>3)] |= (val << (7-((col&7)<<0)));
+					}
+					if(bpp==2) {
+						var val = data[cdi>>3];  val = (val>>(6-(cdi&7)))&3;
+						img[row*bpl + (col>>2)] |= (val << (6-((col&3)<<1)));
+					}
+					if(bpp==4) {
+						var val = data[cdi>>3];  val = (val>>(4-(cdi&7)))&15;
+						img[row*bpl + (col>>1)] |= (val << (4-((col&1)<<2)));
+					}
+					if(bpp>=8) {
+						var ii = row*bpl+col*cbpp;
+						for(var j=0; j<cbpp; j++) img[ii+j] = data[(cdi>>3)+j];
+					}
+					cdi+=bpp;  col+=ci;
+				}
+				y++;  row += ri;
+			}
+			if(sw*sh!=0) di += sh * (1 + bpll);
+			pass = pass + 1;
+		}
+		return img;
+	}
+
+	function _getBPP(out) {
+		var noc = [1,null,3,1,2,null,4][out.ctype];
+		return noc * out.depth;
+	}
+
+	function _filterZero(data, out, off, w, h)
+	{
+		var bpp = _getBPP(out), bpl = Math.ceil(w*bpp/8);
+		bpp = Math.ceil(bpp/8);
+		
+		var i,di, type=data[off], x=0;
+		
+		if(type>1) data[off]=[0,0,1][type-2];  
+		if(type==3) for(x=bpp; x<bpl; x++) data[x+1] = (data[x+1] + (data[x+1-bpp]>>>1) )&255;
+
+		for(var y=0; y<h; y++)  {
+			i = off+y*bpl; di = i+y+1;
+			type = data[di-1]; x=0;
+
+			if     (type==0)   for(; x<bpl; x++) data[i+x] = data[di+x];
+			else if(type==1) { for(; x<bpp; x++) data[i+x] = data[di+x];
+							   for(; x<bpl; x++) data[i+x] = (data[di+x] + data[i+x-bpp]);  }
+			else if(type==2) { for(; x<bpl; x++) data[i+x] = (data[di+x] + data[i+x-bpl]);  }
+			else if(type==3) { for(; x<bpp; x++) data[i+x] = (data[di+x] + ( data[i+x-bpl]>>>1));
+							   for(; x<bpl; x++) data[i+x] = (data[di+x] + ((data[i+x-bpl]+data[i+x-bpp])>>>1) );  }
+			else             { for(; x<bpp; x++) data[i+x] = (data[di+x] + _paeth(0, data[i+x-bpl], 0));
+							   for(; x<bpl; x++) data[i+x] = (data[di+x] + _paeth(data[i+x-bpp], data[i+x-bpl], data[i+x-bpp-bpl]) );  }
+		}
+		return data;
+	}
+
+	function _paeth(a,b,c)
+	{
+		var p = a+b-c, pa = (p-a), pb = (p-b), pc = (p-c);
+		if (pa*pa <= pb*pb && pa*pa <= pc*pc)  return a;
+		else if (pb*pb <= pc*pc)  return b;
+		return c;
+	}
+
+	function _IHDR(data, offset, out)
+	{
+		out.width  = _bin.readUint(data, offset);  offset += 4;
+		out.height = _bin.readUint(data, offset);  offset += 4;
+		out.depth     = data[offset];  offset++;
+		out.ctype     = data[offset];  offset++;
+		out.compress  = data[offset];  offset++;
+		out.filter    = data[offset];  offset++;
+		out.interlace = data[offset];  offset++;
+	}
+
+	function _copyTile(sb, sw, sh, tb, tw, th, xoff, yoff, mode)
+	{
+		var w = Math.min(sw,tw), h = Math.min(sh,th);
+		var si=0, ti=0;
+		for(var y=0; y<h; y++)
+			for(var x=0; x<w; x++)
+			{
+				if(xoff>=0 && yoff>=0) {  si = (y*sw+x)<<2;  ti = (( yoff+y)*tw+xoff+x)<<2;  }
+				else                   {  si = ((-yoff+y)*sw-xoff+x)<<2;  ti = (y*tw+x)<<2;  }
+				
+				if     (mode==0) {  tb[ti] = sb[si];  tb[ti+1] = sb[si+1];  tb[ti+2] = sb[si+2];  tb[ti+3] = sb[si+3];  }
+				else if(mode==1) {
+					var fa = sb[si+3]*(1/255), fr=sb[si]*fa, fg=sb[si+1]*fa, fb=sb[si+2]*fa; 
+					var ba = tb[ti+3]*(1/255), br=tb[ti]*ba, bg=tb[ti+1]*ba, bb=tb[ti+2]*ba; 
+					
+					var ifa=1-fa, oa = fa+ba*ifa, ioa = (oa==0?0:1/oa);
+					tb[ti+3] = 255*oa;  
+					tb[ti+0] = (fr+br*ifa)*ioa;  
+					tb[ti+1] = (fg+bg*ifa)*ioa;   
+					tb[ti+2] = (fb+bb*ifa)*ioa;  
+				}
+				else if(mode==2){	// copy only differences, otherwise zero
+					var fa = sb[si+3], fr=sb[si], fg=sb[si+1], fb=sb[si+2]; 
+					var ba = tb[ti+3], br=tb[ti], bg=tb[ti+1], bb=tb[ti+2]; 
+					if(fa==ba && fr==br && fg==bg && fb==bb) {  tb[ti]=0;  tb[ti+1]=0;  tb[ti+2]=0;  tb[ti+3]=0;  }
+					else {  tb[ti]=fr;  tb[ti+1]=fg;  tb[ti+2]=fb;  tb[ti+3]=fa;  }
+				}
+				else if(mode==3){	// check if can be blended
+					var fa = sb[si+3], fr=sb[si], fg=sb[si+1], fb=sb[si+2]; 
+					var ba = tb[ti+3], br=tb[ti], bg=tb[ti+1], bb=tb[ti+2]; 
+					if(fa==ba && fr==br && fg==bg && fb==bb) continue;
+					//if(fa!=255 && ba!=0) return false;
+					if(fa<220 && ba>20) return false;
+				}
+			}
+		return true;
+	}
+	
+	return {
+		decode:decode,
+		toRGBA8:toRGBA8,
+		_paeth:_paeth,
+		_copyTile:_copyTile,
+		_bin:_bin
+	};
+
+})();
+
+
+
+
+
+
+
+
+
+(function() {
+	var _copyTile = UPNG._copyTile, _bin=UPNG._bin, paeth = UPNG._paeth;
+	var crcLib = {
+		table : ( function() {
+		   var tab = new Uint32Array(256);
+		   for (var n=0; n<256; n++) {
+				var c = n;
+				for (var k=0; k<8; k++) {
+					if (c & 1)  c = 0xedb88320 ^ (c >>> 1);
+					else        c = c >>> 1;
+				}
+				tab[n] = c;  }
+			return tab;  })(),
+		update : function(c, buf, off, len) {
+			for (var i=0; i<len; i++)  c = crcLib.table[(c ^ buf[off+i]) & 0xff] ^ (c >>> 8);
+			return c;
+		},
+		crc : function(b,o,l)  {  return crcLib.update(0xffffffff,b,o,l) ^ 0xffffffff;  }
+	}
+	
+	
+	function addErr(er, tg, ti, f) {
+		tg[ti]+=(er[0]*f)>>4;  tg[ti+1]+=(er[1]*f)>>4;  tg[ti+2]+=(er[2]*f)>>4;  tg[ti+3]+=(er[3]*f)>>4;  
+	}
+	function N(x) {  return Math.max(0, Math.min(255, x));  }
+	function D(a,b) {  var dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2], da=a[3]-b[3];  return (dr*dr + dg*dg + db*db + da*da);  }
+		
+	// MTD: 0: None, 1: floyd-steinberg, 2: Bayer
+	function dither(sb, w, h, plte, tb, oind, MTD) {
+		if(MTD==null) MTD=1;		
+		
+		var pc=plte.length, nplt = [], rads=[];
+		for(var i=0; i<pc; i++) {
+			var c = plte[i];
+			nplt.push([((c>>>0)&255), ((c>>>8)&255), ((c>>>16)&255), ((c>>>24)&255)]);
+		}
+		for(var i=0; i<pc; i++) {
+			var ne=0xffffffff, ni=0;
+			for(var j=0; j<pc; j++) {  var ce=D(nplt[i],nplt[j]);  if(j!=i && ce<ne) {  ne=ce;  ni=j;  }  }
+			var hd = Math.sqrt(ne)/2;
+			rads[i] = ~~(hd*hd);
+		}
+			
+		var tb32 = new Uint32Array(tb.buffer);
+		var err = new Int16Array(w*h*4);
+		
+		/*
+		var S=2, M = [
+			0,2,
+		    3,1];  //*/
+		//*
+		var S=4, M = [
+			 0, 8, 2,10,
+		    12, 4,14, 6,
+			 3,11, 1, 9,
+			15, 7,13, 5 ];  //*/
+		for(var i=0; i<M.length; i++) M[i] = 255*(-0.5 + (M[i]+0.5)/(S*S));
+		
+		for(var y=0; y<h; y++) {
+			for(var x=0; x<w; x++) {
+				var i = (y*w+x)*4;
+				
+				var cc;
+				if(MTD!=2) cc = [N(sb[i]+err[i]), N(sb[i+1]+err[i+1]), N(sb[i+2]+err[i+2]), N(sb[i+3]+err[i+3])];
+				else {
+					var ce = M[(y&(S-1))*S+(x&(S-1))];
+					cc = [N(sb[i]+ce), N(sb[i+1]+ce), N(sb[i+2]+ce), N(sb[i+3]+ce)];
+				}
+				
+				var ni=0, nd = 0xffffff;
+				for(var j=0; j<pc; j++) {
+					var cd = D(cc,nplt[j]);
+					if(cd<nd) {  nd=cd;  ni=j;  }
+				}  
+				
+				var nc = nplt[ni];
+				var er = [cc[0]-nc[0], cc[1]-nc[1], cc[2]-nc[2], cc[3]-nc[3]];
+				
+				if(MTD==1) {
+					//addErr(er, err, i+4, 16);
+					if(x!=w-1) addErr(er, err, i+4    , 7);
+					if(y!=h-1) {
+						if(x!=  0) addErr(er, err, i+4*w-4, 3);
+								   addErr(er, err, i+4*w  , 5);
+						if(x!=w-1) addErr(er, err, i+4*w+4, 1);  
+					}//*/
+				}
+				oind[i>>2] = ni;  tb32[i>>2] = plte[ni];
+			}
+		}
+	}
+
+	
+	function encode(bufs, w, h, ps, dels, tabs, forbidPlte)
+	{
+		if(ps==null) ps=0;
+		if(forbidPlte==null) forbidPlte = false;
+
+		var nimg = compress(bufs, w, h, ps, [false, false, false, 0, forbidPlte,false]);
+		compressPNG(nimg, -1);
+		
+		return _main(nimg, w, h, dels, tabs);
+	}
+
+	function encodeLL(bufs, w, h, cc, ac, depth, dels, tabs) {
+		var nimg = {  ctype: 0 + (cc==1 ? 0 : 2) + (ac==0 ? 0 : 4),      depth: depth,  frames: []  };
+		
+		var time = Date.now();
+		var bipp = (cc+ac)*depth, bipl = bipp * w;
+		for(var i=0; i<bufs.length; i++)
+			nimg.frames.push({  rect:{x:0,y:0,width:w,height:h},  img:new Uint8Array(bufs[i]), blend:0, dispose:1, bpp:Math.ceil(bipp/8), bpl:Math.ceil(bipl/8)  });
+		
+		compressPNG(nimg, 0, true);
+		
+		var out = _main(nimg, w, h, dels, tabs);
+		return out;
+	}
+
+	function _main(nimg, w, h, dels, tabs) {
+		if(tabs==null) tabs={};
+		var crc = crcLib.crc, wUi = _bin.writeUint, wUs = _bin.writeUshort, wAs = _bin.writeASCII;
+		var offset = 8, anim = nimg.frames.length>1, pltAlpha = false;
+		
+		var cicc;
+		
+		var leng = 8 + (16+5+4) /*+ (9+4)*/ + (anim ? 20 : 0);
+		if(tabs["sRGB"]!=null) leng += 8+1+4;
+		if(tabs["pHYs"]!=null) leng += 8+9+4;
+		if(tabs["iCCP"]!=null) {  cicc = pako.deflate(tabs["iCCP"]);  leng += 8 + 11 + 2 + cicc.length + 4;  }
+		if(nimg.ctype==3) {
+			var dl = nimg.plte.length;
+			for(var i=0; i<dl; i++) if((nimg.plte[i]>>>24)!=255) pltAlpha = true;
+			leng += (8 + dl*3 + 4) + (pltAlpha ? (8 + dl*1 + 4) : 0);
+		}
+		for(var j=0; j<nimg.frames.length; j++)
+		{
+			var fr = nimg.frames[j];
+			if(anim) leng += 38;
+			leng += fr.cimg.length + 12;
+			if(j!=0) leng+=4;
+		}
+		leng += 12; 
+		
+		var data = new Uint8Array(leng);
+		var wr=[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+		for(var i=0; i<8; i++) data[i]=wr[i];
+		
+		wUi(data,offset, 13);     offset+=4;
+		wAs(data,offset,"IHDR");  offset+=4;
+		wUi(data,offset,w);  offset+=4;
+		wUi(data,offset,h);  offset+=4;
+		data[offset] = nimg.depth;  offset++;  // depth
+		data[offset] = nimg.ctype;  offset++;  // ctype
+		data[offset] = 0;  offset++;  // compress
+		data[offset] = 0;  offset++;  // filter
+		data[offset] = 0;  offset++;  // interlace
+		wUi(data,offset,crc(data,offset-17,17));  offset+=4; // crc
+
+		// 13 bytes to say, that it is sRGB
+		if(tabs["sRGB"]!=null) {
+			wUi(data,offset, 1);      offset+=4;
+			wAs(data,offset,"sRGB");  offset+=4;
+			data[offset] = tabs["sRGB"];  offset++;
+			wUi(data,offset,crc(data,offset-5,5));  offset+=4; // crc
+		}
+		if(tabs["iCCP"]!=null) {
+			var sl = 11+2+cicc.length;
+			wUi(data,offset, sl);  offset+=4;
+			wAs(data,offset,"iCCP");  offset+=4;
+			wAs(data,offset,"ICC profile");  offset+=11;  offset+=2;
+			data.set(cicc, offset);  offset+=cicc.length;
+			wUi(data,offset,crc(data,offset-(sl+4),sl+4));  offset+=4; // crc
+		}
+		if(tabs["pHYs"]!=null) {
+			wUi(data,offset, 9);      offset+=4;
+			wAs(data,offset,"pHYs");  offset+=4;
+			wUi(data,offset, tabs["pHYs"][0]);      offset+=4;
+			wUi(data,offset, tabs["pHYs"][1]);      offset+=4;
+			data[offset]=tabs["pHYs"][2];			offset++;
+			wUi(data,offset,crc(data,offset-13,13));  offset+=4; // crc
+		}
+
+		if(anim) {
+			wUi(data,offset, 8);      offset+=4;
+			wAs(data,offset,"acTL");  offset+=4;
+			wUi(data,offset, nimg.frames.length);     offset+=4;
+			wUi(data,offset, tabs["loop"]!=null?tabs["loop"]:0);      offset+=4;
+			wUi(data,offset,crc(data,offset-12,12));  offset+=4; // crc
+		}
+
+		if(nimg.ctype==3) {
+			var dl = nimg.plte.length;
+			wUi(data,offset, dl*3);  offset+=4;
+			wAs(data,offset,"PLTE");  offset+=4;
+			for(var i=0; i<dl; i++){
+				var ti=i*3, c=nimg.plte[i], r=(c)&255, g=(c>>>8)&255, b=(c>>>16)&255;
+				data[offset+ti+0]=r;  data[offset+ti+1]=g;  data[offset+ti+2]=b;
+			}
+			offset+=dl*3;
+			wUi(data,offset,crc(data,offset-dl*3-4,dl*3+4));  offset+=4; // crc
+
+			if(pltAlpha) {
+				wUi(data,offset, dl);  offset+=4;
+				wAs(data,offset,"tRNS");  offset+=4;
+				for(var i=0; i<dl; i++)  data[offset+i]=(nimg.plte[i]>>>24)&255;
+				offset+=dl;
+				wUi(data,offset,crc(data,offset-dl-4,dl+4));  offset+=4; // crc
+			}
+		}
+		
+		var fi = 0;
+		for(var j=0; j<nimg.frames.length; j++)
+		{
+			var fr = nimg.frames[j];
+			if(anim) {
+				wUi(data, offset, 26);     offset+=4;
+				wAs(data, offset,"fcTL");  offset+=4;
+				wUi(data, offset, fi++);   offset+=4;
+				wUi(data, offset, fr.rect.width );   offset+=4;
+				wUi(data, offset, fr.rect.height);   offset+=4;
+				wUi(data, offset, fr.rect.x);   offset+=4;
+				wUi(data, offset, fr.rect.y);   offset+=4;
+				wUs(data, offset, dels[j]);   offset+=2;
+				wUs(data, offset,  1000);   offset+=2;
+				data[offset] = fr.dispose;  offset++;	// dispose
+				data[offset] = fr.blend  ;  offset++;	// blend
+				wUi(data,offset,crc(data,offset-30,30));  offset+=4; // crc
+			}
+					
+			var imgd = fr.cimg, dl = imgd.length;
+			wUi(data,offset, dl+(j==0?0:4));     offset+=4;
+			var ioff = offset;
+			wAs(data,offset,(j==0)?"IDAT":"fdAT");  offset+=4;
+			if(j!=0) {  wUi(data, offset, fi++);  offset+=4;  }
+			data.set(imgd,offset);
+			offset += dl;
+			wUi(data,offset,crc(data,ioff,offset-ioff));  offset+=4; // crc
+		}
+
+		wUi(data,offset, 0);     offset+=4;
+		wAs(data,offset,"IEND");  offset+=4;
+		wUi(data,offset,crc(data,offset-4,4));  offset+=4; // crc
+
+		return data.buffer;
+	}
+
+	function compressPNG(out, filter, levelZero) {
+		for(var i=0; i<out.frames.length; i++) {
+			var frm = out.frames[i], nw=frm.rect.width, nh=frm.rect.height;
+			var fdata = new Uint8Array(nh*frm.bpl+nh);
+			frm.cimg = _filterZero(frm.img,nh,frm.bpp,frm.bpl,fdata, filter, levelZero);
+		}
+	}
+
+
+
+	function compress(bufs, w, h, ps, prms) // prms:  onlyBlend, minBits, forbidPlte
+	{
+		//var time = Date.now();
+		var onlyBlend = prms[0], evenCrd = prms[1], forbidPrev = prms[2], minBits = prms[3], forbidPlte = prms[4], dith=prms[5];
+		
+		var ctype = 6, depth = 8, alphaAnd=255
+		
+		for(var j=0; j<bufs.length; j++)  {  // when not quantized, other frames can contain colors, that are not in an initial frame
+			var img = new Uint8Array(bufs[j]), ilen = img.length;
+			for(var i=0; i<ilen; i+=4) alphaAnd &= img[i+3];
+		}
+		var gotAlpha = (alphaAnd!=255);
+		
+		//console.log("alpha check", Date.now()-time);  time = Date.now();
+		
+		//var brute = gotAlpha && forGIF;		// brute : frames can only be copied, not "blended"
+		var frms = framize(bufs, w, h, onlyBlend, evenCrd, forbidPrev);
+		//console.log("framize", Date.now()-time);  time = Date.now();
+		
+		var cmap={}, plte=[], inds=[]; 
+		
+		if(ps!=0) {
+			var nbufs = [];  for(var i=0; i<frms.length; i++) nbufs.push(frms[i].img.buffer);
+			
+			var abuf = concatRGBA(nbufs), qres = quantize(abuf, ps);
+			
+			for(var i=0; i<qres.plte.length; i++) plte.push(qres.plte[i].est.rgba);
+			
+			var cof = 0;
+			for(var i=0; i<frms.length; i++) {  
+				var frm=frms[i], bln=frm.img.length, ind = new Uint8Array(qres.inds.buffer, cof>>2, bln>>2);  inds.push(ind);
+				var bb = new Uint8Array(qres.abuf,cof,bln);
+				
+				//console.log(frm.img, frm.width, frm.height);
+				//var time = Date.now();
+				if(dith) dither(frm.img, frm.rect.width, frm.rect.height, plte, bb, ind);
+				//console.log(Date.now()-time);
+				frm.img.set(bb);  cof+=bln;  
+			}
+			
+			//console.log("quantize", Date.now()-time);  time = Date.now();
+		}
+		else {
+			// what if ps==0, but there are <=256 colors?  we still need to detect, if the palette could be used
+			for(var j=0; j<frms.length; j++)  {  // when not quantized, other frames can contain colors, that are not in an initial frame
+				var frm = frms[j], img32 = new Uint32Array(frm.img.buffer), nw=frm.rect.width, ilen = img32.length;
+				var ind = new Uint8Array(ilen);  inds.push(ind);
+				for(var i=0; i<ilen; i++) {
+					var c = img32[i];
+					if     (i!=0 && c==img32[i- 1]) ind[i]=ind[i-1];
+					else if(i>nw && c==img32[i-nw]) ind[i]=ind[i-nw];
+					else {
+						var cmc = cmap[c];
+						if(cmc==null) {  cmap[c]=cmc=plte.length;  plte.push(c);  if(plte.length>=300) break;  }
+						ind[i]=cmc;
+					}
+				}
+			}
+			//console.log("make palette", Date.now()-time);  time = Date.now();
+		}
+		
+		var cc=plte.length; //console.log("colors:",cc);
+		if(cc<=256 && forbidPlte==false) {
+			if(cc<= 2) depth=1;  else if(cc<= 4) depth=2;  else if(cc<=16) depth=4;  else depth=8;
+			depth =  Math.max(depth, minBits);
+		}
+		
+		for(var j=0; j<frms.length; j++)
+		{
+			var frm = frms[j], nx=frm.rect.x, ny=frm.rect.y, nw=frm.rect.width, nh=frm.rect.height;
+			var cimg = frm.img, cimg32 = new Uint32Array(cimg.buffer);
+			var bpl = 4*nw, bpp=4;
+			if(cc<=256 && forbidPlte==false) {
+				bpl = Math.ceil(depth*nw/8);
+				var nimg = new Uint8Array(bpl*nh);
+				var inj = inds[j];
+				for(var y=0; y<nh; y++) {  var i=y*bpl, ii=y*nw;
+					if     (depth==8) for(var x=0; x<nw; x++) nimg[i+(x)   ]   =  (inj[ii+x]             );
+					else if(depth==4) for(var x=0; x<nw; x++) nimg[i+(x>>1)]  |=  (inj[ii+x]<<(4-(x&1)*4));
+					else if(depth==2) for(var x=0; x<nw; x++) nimg[i+(x>>2)]  |=  (inj[ii+x]<<(6-(x&3)*2));
+					else if(depth==1) for(var x=0; x<nw; x++) nimg[i+(x>>3)]  |=  (inj[ii+x]<<(7-(x&7)*1));
+				}
+				cimg=nimg;  ctype=3;  bpp=1;
+			}
+			else if(gotAlpha==false && frms.length==1) {	// some next "reduced" frames may contain alpha for blending
+				var nimg = new Uint8Array(nw*nh*3), area=nw*nh;
+				for(var i=0; i<area; i++) { var ti=i*3, qi=i*4;  nimg[ti]=cimg[qi];  nimg[ti+1]=cimg[qi+1];  nimg[ti+2]=cimg[qi+2];  }
+				cimg=nimg;  ctype=2;  bpp=3;  bpl=3*nw;
+			}
+			frm.img=cimg;  frm.bpl=bpl;  frm.bpp=bpp;
+		}
+		//console.log("colors => palette indices", Date.now()-time);  time = Date.now();
+		
+		return {ctype:ctype, depth:depth, plte:plte, frames:frms  };
+	}
+	function framize(bufs,w,h,alwaysBlend,evenCrd,forbidPrev) {
+		/*  DISPOSE
+			- 0 : no change
+			- 1 : clear to transparent
+			- 2 : retstore to content before rendering (previous frame disposed)
+			BLEND
+			- 0 : replace
+			- 1 : blend
+		*/
+		var frms = [];
+		for(var j=0; j<bufs.length; j++) {
+			var cimg = new Uint8Array(bufs[j]), cimg32 = new Uint32Array(cimg.buffer);
+			var nimg;
+			
+			var nx=0, ny=0, nw=w, nh=h, blend=alwaysBlend?1:0;
+			if(j!=0) {
+				var tlim = (forbidPrev || alwaysBlend || j==1 || frms[j-2].dispose!=0)?1:2, tstp = 0, tarea = 1e9;
+				for(var it=0; it<tlim; it++)
+				{
+					var pimg = new Uint8Array(bufs[j-1-it]), p32 = new Uint32Array(bufs[j-1-it]);
+					var mix=w,miy=h,max=-1,may=-1;
+					for(var y=0; y<h; y++) for(var x=0; x<w; x++) {
+						var i = y*w+x;
+						if(cimg32[i]!=p32[i]) {
+							if(x<mix) mix=x;  if(x>max) max=x;
+							if(y<miy) miy=y;  if(y>may) may=y;
+						}
+					}
+					if(max==-1) mix=miy=max=may=0;
+					if(evenCrd) {  if((mix&1)==1)mix--;  if((miy&1)==1)miy--;  }
+					var sarea = (max-mix+1)*(may-miy+1);
+					if(sarea<tarea) {
+						tarea = sarea;  tstp = it;
+						nx = mix; ny = miy; nw = max-mix+1; nh = may-miy+1;
+					}
+				}
+				
+				// alwaysBlend: pokud zjistím, že blendit nelze, nastavím předchozímu snímku dispose=1. Zajistím, aby obsahoval můj obdélník.
+				var pimg = new Uint8Array(bufs[j-1-tstp]);
+				if(tstp==1) frms[j-1].dispose = 2;
+				
+				nimg = new Uint8Array(nw*nh*4);
+				_copyTile(pimg,w,h, nimg,nw,nh, -nx,-ny, 0);
+				
+				blend =  _copyTile(cimg,w,h, nimg,nw,nh, -nx,-ny, 3) ? 1 : 0;
+				if(blend==1) _prepareDiff(cimg,w,h,nimg,{x:nx,y:ny,width:nw,height:nh});
+				else         _copyTile(cimg,w,h, nimg,nw,nh, -nx,-ny, 0);
+			}
+			else nimg = cimg.slice(0);	// img may be rewritten further ... don't rewrite input
+			
+			frms.push({rect:{x:nx,y:ny,width:nw,height:nh}, img:nimg, blend:blend, dispose:0});
+		}
+		
+		
+		if(alwaysBlend) for(var j=0; j<frms.length; j++) {
+			var frm = frms[j];  if(frm.blend==1) continue;
+			var r0 = frm.rect, r1 = frms[j-1].rect
+			var miX = Math.min(r0.x, r1.x), miY = Math.min(r0.y, r1.y);
+			var maX = Math.max(r0.x+r0.width, r1.x+r1.width), maY = Math.max(r0.y+r0.height, r1.y+r1.height);
+			var r = {x:miX, y:miY, width:maX-miX, height:maY-miY};
+			
+			frms[j-1].dispose = 1;
+			if(j-1!=0) 
+			_updateFrame(bufs, w,h,frms, j-1,r, evenCrd);
+			_updateFrame(bufs, w,h,frms, j  ,r, evenCrd);
+		}
+		var area = 0;
+		if(bufs.length!=1) for(var i=0; i<frms.length; i++) {
+			var frm = frms[i];
+			area += frm.rect.width*frm.rect.height;
+			//if(i==0 || frm.blend!=1) continue;
+			//var ob = new Uint8Array(
+			//console.log(frm.blend, frm.dispose, frm.rect);
+		}
+		//if(area!=0) console.log(area);
+		return frms;
+	}
+	function _updateFrame(bufs, w,h, frms, i, r, evenCrd) {
+		var U8 = Uint8Array, U32 = Uint32Array;
+		var pimg = new U8(bufs[i-1]), pimg32 = new U32(bufs[i-1]), nimg = i+1<bufs.length ? new U8(bufs[i+1]):null;
+		var cimg = new U8(bufs[i]), cimg32 = new U32(cimg.buffer);
+		
+		var mix=w,miy=h,max=-1,may=-1;
+		for(var y=0; y<r.height; y++) for(var x=0; x<r.width; x++) {
+			var cx = r.x+x, cy = r.y+y;
+			var j = cy*w+cx, cc = cimg32[j];
+			// no need to draw transparency, or to dispose it. Or, if writing the same color and the next one does not need transparency.
+			if(cc==0 || (frms[i-1].dispose==0 && pimg32[j]==cc && (nimg==null || nimg[j*4+3]!=0))/**/) {}
+			else {
+				if(cx<mix) mix=cx;  if(cx>max) max=cx;
+				if(cy<miy) miy=cy;  if(cy>may) may=cy;
+			}
+		}
+		if(max==-1) mix=miy=max=may=0;
+		if(evenCrd) {  if((mix&1)==1)mix--;  if((miy&1)==1)miy--;  }
+		r = {x:mix, y:miy, width:max-mix+1, height:may-miy+1};
+		
+		var fr = frms[i];  fr.rect = r;  fr.blend = 1;  fr.img = new Uint8Array(r.width*r.height*4);
+		if(frms[i-1].dispose==0) {
+			_copyTile(pimg,w,h, fr.img,r.width,r.height, -r.x,-r.y, 0);
+			_prepareDiff(cimg,w,h,fr.img,r);
+		}
+		else
+			_copyTile(cimg,w,h, fr.img,r.width,r.height, -r.x,-r.y, 0);
+	}
+	function _prepareDiff(cimg, w,h, nimg, rec) {
+		_copyTile(cimg,w,h, nimg,rec.width,rec.height, -rec.x,-rec.y, 2);
+	}
+
+	function _filterZero(img,h,bpp,bpl,data, filter, levelZero)
+	{
+		var fls = [], ftry=[0,1,2,3,4];
+		if     (filter!=-1)             ftry=[filter];
+		else if(h*bpl>500000 || bpp==1) ftry=[0];
+		var opts;  if(levelZero) opts={level:0};
+		
+		
+		var CMPR = (data.length>10e6 && window.UZIP!=null) ? window.UZIP : pako;
+		
+		var time = Date.now();
+		for(var i=0; i<ftry.length; i++) {
+			for(var y=0; y<h; y++) _filterLine(data, img, y, bpl, bpp, ftry[i]);
+			//var nimg = new Uint8Array(data.length);
+			//var sz = UZIP.F.deflate(data, nimg);  fls.push(nimg.slice(0,sz));
+			//var dfl = pako["deflate"](data), dl=dfl.length-4;
+			//var crc = (dfl[dl+3]<<24)|(dfl[dl+2]<<16)|(dfl[dl+1]<<8)|(dfl[dl+0]<<0);
+			//console.log(crc, UZIP.adler(data,2,data.length-6));
+			fls.push(CMPR["deflate"](data,opts));
+		}
+		
+		var ti, tsize=1e9;
+		for(var i=0; i<fls.length; i++) if(fls[i].length<tsize) {  ti=i;  tsize=fls[i].length;  }
+		return fls[ti];
+	}
+	function _filterLine(data, img, y, bpl, bpp, type)
+	{
+		var i = y*bpl, di = i+y;
+		data[di]=type;  di++;
+
+		if(type==0) {
+			if(bpl<500) for(var x=0; x<bpl; x++) data[di+x] = img[i+x];
+			else data.set(new Uint8Array(img.buffer,i,bpl),di);
+		}
+		else if(type==1) {
+			for(var x=  0; x<bpp; x++) data[di+x] =  img[i+x];
+			for(var x=bpp; x<bpl; x++) data[di+x] = (img[i+x]-img[i+x-bpp]+256)&255;
+		}
+		else if(y==0) {
+			for(var x=  0; x<bpp; x++) data[di+x] = img[i+x];
+
+			if(type==2) for(var x=bpp; x<bpl; x++) data[di+x] = img[i+x];
+			if(type==3) for(var x=bpp; x<bpl; x++) data[di+x] = (img[i+x] - (img[i+x-bpp]>>1) +256)&255;
+			if(type==4) for(var x=bpp; x<bpl; x++) data[di+x] = (img[i+x] - paeth(img[i+x-bpp], 0, 0) +256)&255;
+		}
+		else {
+			if(type==2) { for(var x=  0; x<bpl; x++) data[di+x] = (img[i+x]+256 - img[i+x-bpl])&255;  }
+			if(type==3) { for(var x=  0; x<bpp; x++) data[di+x] = (img[i+x]+256 - (img[i+x-bpl]>>1))&255;
+						  for(var x=bpp; x<bpl; x++) data[di+x] = (img[i+x]+256 - ((img[i+x-bpl]+img[i+x-bpp])>>1))&255;  }
+			if(type==4) { for(var x=  0; x<bpp; x++) data[di+x] = (img[i+x]+256 - paeth(0, img[i+x-bpl], 0))&255;
+						  for(var x=bpp; x<bpl; x++) data[di+x] = (img[i+x]+256 - paeth(img[i+x-bpp], img[i+x-bpl], img[i+x-bpp-bpl]))&255;  }
+		}
+	}
+
+
+	function quantize(abuf, ps, doKmeans)
+	{	
+		var time = Date.now();
+		var sb = new Uint8Array(abuf), tb = sb.slice(0), tb32 = new Uint32Array(tb.buffer);
+		
+		var KD = getKDtree(tb, ps);
+		var root = KD[0], leafs = KD[1], K=leafs.length;
+		
+		//console.log(Date.now()-time, "tree made");  time = Date.now();
+		
+		var cl32 = new Uint32Array(K), clr8=new Uint8Array(cl32.buffer);
+		for(var i=0; i<K; i++) cl32[i]=leafs[i].est.rgba;
+		
+		var len=sb.length;
+			
+		var inds = new Uint8Array(len>>2), nd;
+		if(K<=60) {  findNearest(sb,inds,clr8);  remap(inds,tb32,cl32);  }
+		else if(sb.length<32e6)  // precise, but slow :(
+			//for(var j=0; j<4; j++) 
+			for(var i=0; i<len; i+=4) {
+				var r=sb[i]*(1/255), g=sb[i+1]*(1/255), b=sb[i+2]*(1/255), a=sb[i+3]*(1/255);
+				
+				nd = getNearest(root, r, g, b, a);
+				inds[i>>2] = nd.ind;  tb32[i>>2] = nd.est.rgba;
+			}
+		else 
+			for(var i=0; i<len; i+=4) {
+				var r=sb[i]*(1/255), g=sb[i+1]*(1/255), b=sb[i+2]*(1/255), a=sb[i+3]*(1/255);
+				
+				nd = root;  while(nd.left) nd = (planeDst(nd.est,r,g,b,a)<=0) ? nd.left : nd.right;
+				inds[i>>2] = nd.ind;  tb32[i>>2] = nd.est.rgba;
+			}
+			
+		//console.log(Date.now()-time, "nearest found");  time = Date.now();
+		
+		if(doKmeans || sb.length*K<10*4e6) {
+			var le = 1e9;
+			for(var i=0; i<10; i++) {
+				var ce = kmeans(sb, inds, clr8);  //console.log(i,ce);
+				if(ce/le>0.997) break;  le=ce;
+			}
+			for(var i=0; i<K; i++) leafs[i].est.rgba = cl32[i];
+			remap(inds,tb32,cl32);
+			//console.log(Date.now()-time, "k-means");
+		}
+		
+		return {  abuf:tb.buffer, inds:inds, plte:leafs  };
+	}
+	
+	function remap(inds,tb32,pl32) {  for(var i=0; i<inds.length; i++) tb32[i]=pl32[inds[i]];  }
+	function kmeans(sb,inds,plte) {
+		updatePalette(sb,inds,plte);
+		var err = findNearest(sb,inds,plte);
+		return err;
+	}
+	
+	function updatePalette(sb,inds,plte) {
+		var K = plte.length>>>2;
+		var sums = new Uint32Array(K*4), cnts = new Uint32Array(K);
+		
+		for(var i=0; i<sb.length; i+=4) {
+			var ind = inds[i>>>2], qi=ind*4;
+			cnts[ind]++;
+			sums[qi  ]+=sb[i  ];  sums[qi+1]+=sb[i+1];
+			sums[qi+2]+=sb[i+2];  sums[qi+3]+=sb[i+3];
+		}
+		for(var i=0; i<plte.length; i++) plte[i]=Math.round(sums[i]/cnts[i>>>2]);
+	}
+	
+	function findNearest(sb,inds,plte) {
+		var terr = 0, K=plte.length>>>2;
+		
+		var nd = [];  // squared half-distance to the nearest color
+		for(var i=0; i<K; i++) {
+			var qi=i*4;
+			var r=plte[qi], g=plte[qi+1], b=plte[qi+2], a=plte[qi+3], ti=0, te=1e9;
+			for(var j=0; j<K; j++) {
+				if(i==j) continue;
+				var qj=j*4, dr=r-plte[qj], dg=g-plte[qj+1], db=b-plte[qj+2], da=a-plte[qj+3];
+				var err = dr*dr+dg*dg+db*db+da*da;
+				if(err<te) {te=err;  ti=j;}
+			}
+			nd[i] = Math.sqrt(te)*0.5;  nd[i]=nd[i]*nd[i];
+		}
+		
+		for(var i=0; i<sb.length; i+=4) {
+			var r=sb[i  ], g=sb[i+1], b=sb[i+2], a=sb[i+3];
+			var ti=inds[i>>>2], qi=ti*4, dr=r-plte[qi], dg=g-plte[qi+1], db=b-plte[qi+2], da=a-plte[qi+3], te = dr*dr+dg*dg+db*db+da*da;
+			if(te>nd[ti]) for(var j=0; j<K; j++) {
+				qi=j*4; dr=r-plte[qi]; dg=g-plte[qi+1]; db=b-plte[qi+2]; da=a-plte[qi+3];
+				var err = dr*dr+dg*dg+db*db+da*da;
+				if(err<te) {te=err;  ti=j;  if(te<nd[j]) break; }
+			}
+			inds[i>>>2]=ti;
+			terr+=te;
+		}
+		return terr/(sb.length>>>2);
+	}
+
+	function getKDtree(nimg, ps, err) {
+		if(err==null) err = 0.0001;
+		var nimg32 = new Uint32Array(nimg.buffer);
+		
+		var root = {i0:0, i1:nimg.length, bst:null, est:null, tdst:0, left:null, right:null };  // basic statistic, extra statistic
+		root.bst = stats(  nimg,root.i0, root.i1  );  root.est = estats( root.bst );
+		var leafs = [root];
+		
+		while(leafs.length<ps)
+		{
+			var maxL = 0, mi=0;
+			for(var i=0; i<leafs.length; i++) if(leafs[i].est.L > maxL) {  maxL=leafs[i].est.L;  mi=i;  }
+			if(maxL<err) break;
+			var node = leafs[mi];
+			
+			var s0 = splitPixels(nimg,nimg32, node.i0, node.i1, node.est.e, node.est.eMq255);
+			var s0wrong = (node.i0>=s0 || node.i1<=s0);
+			//console.log(maxL, leafs.length, mi);
+			if(s0wrong) {  node.est.L=0;  continue;  }
+			
+			
+			var ln = {i0:node.i0, i1:s0, bst:null, est:null, tdst:0, left:null, right:null };  ln.bst = stats( nimg, ln.i0, ln.i1 );  
+			ln.est = estats( ln.bst );
+			var rn = {i0:s0, i1:node.i1, bst:null, est:null, tdst:0, left:null, right:null };  rn.bst = {R:[], m:[], N:node.bst.N-ln.bst.N};
+			for(var i=0; i<16; i++) rn.bst.R[i] = node.bst.R[i]-ln.bst.R[i];
+			for(var i=0; i< 4; i++) rn.bst.m[i] = node.bst.m[i]-ln.bst.m[i];
+			rn.est = estats( rn.bst );
+			
+			node.left = ln;  node.right = rn;
+			leafs[mi]=ln;  leafs.push(rn);
+		}
+		leafs.sort(function(a,b) {  return b.bst.N-a.bst.N;  });
+		for(var i=0; i<leafs.length; i++) leafs[i].ind=i;
+		return [root, leafs];
+	}
+
+	function getNearest(nd, r,g,b,a)
+	{
+		if(nd.left==null) {  nd.tdst = dist(nd.est.q,r,g,b,a);  return nd;  }
+		var pd = planeDst(nd.est,r,g,b,a);
+		
+		var node0 = nd.left, node1 = nd.right;
+		if(pd>0) {  node0=nd.right;  node1=nd.left;  }
+		
+		var ln = getNearest(node0, r,g,b,a);
+		if(ln.tdst<=pd*pd) return ln;
+		var rn = getNearest(node1, r,g,b,a);
+		return rn.tdst<ln.tdst ? rn : ln;
+	}
+	function planeDst(est, r,g,b,a) {  var e = est.e;  return e[0]*r + e[1]*g + e[2]*b + e[3]*a - est.eMq;  }
+	function dist    (q,   r,g,b,a) {  var d0=r-q[0], d1=g-q[1], d2=b-q[2], d3=a-q[3];  return d0*d0+d1*d1+d2*d2+d3*d3;  }
+
+	function splitPixels(nimg, nimg32, i0, i1, e, eMq)
+	{
+		i1-=4;
+		var shfs = 0;
+		while(i0<i1)
+		{
+			while(vecDot(nimg, i0, e)<=eMq) i0+=4;
+			while(vecDot(nimg, i1, e)> eMq) i1-=4;
+			if(i0>=i1) break;
+			
+			var t = nimg32[i0>>2];  nimg32[i0>>2] = nimg32[i1>>2];  nimg32[i1>>2]=t;
+			
+			i0+=4;  i1-=4;
+		}
+		while(vecDot(nimg, i0, e)>eMq) i0-=4;
+		return i0+4;
+	}
+	function vecDot(nimg, i, e)
+	{
+		return nimg[i]*e[0] + nimg[i+1]*e[1] + nimg[i+2]*e[2] + nimg[i+3]*e[3];
+	}
+	function stats(nimg, i0, i1){
+		var R = [0,0,0,0,  0,0,0,0,  0,0,0,0,  0,0,0,0];
+		var m = [0,0,0,0];
+		var N = (i1-i0)>>2;
+		for(var i=i0; i<i1; i+=4)
+		{
+			var r = nimg[i]*(1/255), g = nimg[i+1]*(1/255), b = nimg[i+2]*(1/255), a = nimg[i+3]*(1/255);
+			//var r = nimg[i], g = nimg[i+1], b = nimg[i+2], a = nimg[i+3];
+			m[0]+=r;  m[1]+=g;  m[2]+=b;  m[3]+=a;
+			
+			R[ 0] += r*r;  R[ 1] += r*g;  R[ 2] += r*b;  R[ 3] += r*a;  
+						   R[ 5] += g*g;  R[ 6] += g*b;  R[ 7] += g*a; 
+										  R[10] += b*b;  R[11] += b*a;  
+														 R[15] += a*a;  
+		}
+		R[4]=R[1];  R[8]=R[2];  R[9]=R[6];  R[12]=R[3];  R[13]=R[7];  R[14]=R[11];
+		
+		return {R:R, m:m, N:N};
+	}
+	function estats(stats){
+		var R = stats.R, m = stats.m, N = stats.N;
+		
+		// when all samples are equal, but N is large (millions), the Rj can be non-zero ( 0.0003.... - precission error)
+		var m0 = m[0], m1 = m[1], m2 = m[2], m3 = m[3], iN = (N==0 ? 0 : 1/N);
+		var Rj = [
+			R[ 0] - m0*m0*iN,  R[ 1] - m0*m1*iN,  R[ 2] - m0*m2*iN,  R[ 3] - m0*m3*iN,  
+			R[ 4] - m1*m0*iN,  R[ 5] - m1*m1*iN,  R[ 6] - m1*m2*iN,  R[ 7] - m1*m3*iN,
+			R[ 8] - m2*m0*iN,  R[ 9] - m2*m1*iN,  R[10] - m2*m2*iN,  R[11] - m2*m3*iN,  
+			R[12] - m3*m0*iN,  R[13] - m3*m1*iN,  R[14] - m3*m2*iN,  R[15] - m3*m3*iN 
+		];
+		
+		var A = Rj, M = M4;
+		var b = [Math.random(),Math.random(),Math.random(),Math.random()], mi = 0, tmi = 0;
+		
+		if(N!=0)
+		for(var i=0; i<16; i++) {
+			b = M.multVec(A, b);  tmi = Math.sqrt(M.dot(b,b));  b = M.sml(1/tmi,  b);
+			if(i!=0 && Math.abs(tmi-mi)<1e-9) break;  mi = tmi;
+		}	
+		//b = [0,0,1,0];  mi=N;
+		var q = [m0*iN, m1*iN, m2*iN, m3*iN];
+		var eMq255 = M.dot(M.sml(255,q),b);
+		
+		return {  Cov:Rj, q:q, e:b, L:mi,  eMq255:eMq255, eMq : M.dot(b,q),
+					rgba: (((Math.round(255*q[3])<<24) | (Math.round(255*q[2])<<16) |  (Math.round(255*q[1])<<8) | (Math.round(255*q[0])<<0))>>>0)  };
+	}
+	var M4 = {
+		multVec : function(m,v) {
+				return [
+					m[ 0]*v[0] + m[ 1]*v[1] + m[ 2]*v[2] + m[ 3]*v[3],
+					m[ 4]*v[0] + m[ 5]*v[1] + m[ 6]*v[2] + m[ 7]*v[3],
+					m[ 8]*v[0] + m[ 9]*v[1] + m[10]*v[2] + m[11]*v[3],
+					m[12]*v[0] + m[13]*v[1] + m[14]*v[2] + m[15]*v[3]
+				];
+		},
+		dot : function(x,y) {  return  x[0]*y[0]+x[1]*y[1]+x[2]*y[2]+x[3]*y[3];  },
+		sml : function(a,y) {  return [a*y[0],a*y[1],a*y[2],a*y[3]];  }
+	}
+
+	function concatRGBA(bufs) {
+		var tlen = 0;
+		for(var i=0; i<bufs.length; i++) tlen += bufs[i].byteLength;
+		var nimg = new Uint8Array(tlen), noff=0;
+		for(var i=0; i<bufs.length; i++) {
+			var img = new Uint8Array(bufs[i]), il = img.length;
+			for(var j=0; j<il; j+=4) {  
+				var r=img[j], g=img[j+1], b=img[j+2], a = img[j+3];
+				if(a==0) r=g=b=0;
+				nimg[noff+j]=r;  nimg[noff+j+1]=g;  nimg[noff+j+2]=b;  nimg[noff+j+3]=a;  }
+			noff += il;
+		}
+		return nimg.buffer;
+	}
+	
+	UPNG.encode = encode;
+	UPNG.encodeLL = encodeLL;
+	UPNG.encode.compress = compress;
+	UPNG.encode.dither = dither;
+	
+	UPNG.quantize = quantize;
+	UPNG.quantize.findNearest=findNearest;
+	UPNG.quantize.getKDtree=getKDtree;
+	UPNG.quantize.getNearest=getNearest;
+})();
+  </script>
+  <!-- jpeg-js 0.4.4, BSD-3-Clause: https://github.com/eugeneware/jpeg-js -->
+  <script>
+/*
+  Copyright (c) 2008, Adobe Systems Incorporated
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without 
+  modification, are permitted provided that the following conditions are
+  met:
+
+  * Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+  
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the 
+    documentation and/or other materials provided with the distribution.
+  
+  * Neither the name of Adobe Systems Incorporated nor the names of its 
+    contributors may be used to endorse or promote products derived from 
+    this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+/*
+JPEG encoder ported to JavaScript and optimized by Andreas Ritter, www.bytestrom.eu, 11/2009
+
+Basic GUI blocking jpeg encoder
+*/
+
+var btoa = btoa || function(buf) {
+  return Buffer.from(buf).toString('base64');
+};
+
+function JPEGEncoder(quality) {
+  var self = this;
+	var fround = Math.round;
+	var ffloor = Math.floor;
+	var YTable = new Array(64);
+	var UVTable = new Array(64);
+	var fdtbl_Y = new Array(64);
+	var fdtbl_UV = new Array(64);
+	var YDC_HT;
+	var UVDC_HT;
+	var YAC_HT;
+	var UVAC_HT;
+	
+	var bitcode = new Array(65535);
+	var category = new Array(65535);
+	var outputfDCTQuant = new Array(64);
+	var DU = new Array(64);
+	var byteout = [];
+	var bytenew = 0;
+	var bytepos = 7;
+	
+	var YDU = new Array(64);
+	var UDU = new Array(64);
+	var VDU = new Array(64);
+	var clt = new Array(256);
+	var RGB_YUV_TABLE = new Array(2048);
+	var currentQuality;
+	
+	var ZigZag = [
+			 0, 1, 5, 6,14,15,27,28,
+			 2, 4, 7,13,16,26,29,42,
+			 3, 8,12,17,25,30,41,43,
+			 9,11,18,24,31,40,44,53,
+			10,19,23,32,39,45,52,54,
+			20,22,33,38,46,51,55,60,
+			21,34,37,47,50,56,59,61,
+			35,36,48,49,57,58,62,63
+		];
+	
+	var std_dc_luminance_nrcodes = [0,0,1,5,1,1,1,1,1,1,0,0,0,0,0,0,0];
+	var std_dc_luminance_values = [0,1,2,3,4,5,6,7,8,9,10,11];
+	var std_ac_luminance_nrcodes = [0,0,2,1,3,3,2,4,3,5,5,4,4,0,0,1,0x7d];
+	var std_ac_luminance_values = [
+			0x01,0x02,0x03,0x00,0x04,0x11,0x05,0x12,
+			0x21,0x31,0x41,0x06,0x13,0x51,0x61,0x07,
+			0x22,0x71,0x14,0x32,0x81,0x91,0xa1,0x08,
+			0x23,0x42,0xb1,0xc1,0x15,0x52,0xd1,0xf0,
+			0x24,0x33,0x62,0x72,0x82,0x09,0x0a,0x16,
+			0x17,0x18,0x19,0x1a,0x25,0x26,0x27,0x28,
+			0x29,0x2a,0x34,0x35,0x36,0x37,0x38,0x39,
+			0x3a,0x43,0x44,0x45,0x46,0x47,0x48,0x49,
+			0x4a,0x53,0x54,0x55,0x56,0x57,0x58,0x59,
+			0x5a,0x63,0x64,0x65,0x66,0x67,0x68,0x69,
+			0x6a,0x73,0x74,0x75,0x76,0x77,0x78,0x79,
+			0x7a,0x83,0x84,0x85,0x86,0x87,0x88,0x89,
+			0x8a,0x92,0x93,0x94,0x95,0x96,0x97,0x98,
+			0x99,0x9a,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,
+			0xa8,0xa9,0xaa,0xb2,0xb3,0xb4,0xb5,0xb6,
+			0xb7,0xb8,0xb9,0xba,0xc2,0xc3,0xc4,0xc5,
+			0xc6,0xc7,0xc8,0xc9,0xca,0xd2,0xd3,0xd4,
+			0xd5,0xd6,0xd7,0xd8,0xd9,0xda,0xe1,0xe2,
+			0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,
+			0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,
+			0xf9,0xfa
+		];
+	
+	var std_dc_chrominance_nrcodes = [0,0,3,1,1,1,1,1,1,1,1,1,0,0,0,0,0];
+	var std_dc_chrominance_values = [0,1,2,3,4,5,6,7,8,9,10,11];
+	var std_ac_chrominance_nrcodes = [0,0,2,1,2,4,4,3,4,7,5,4,4,0,1,2,0x77];
+	var std_ac_chrominance_values = [
+			0x00,0x01,0x02,0x03,0x11,0x04,0x05,0x21,
+			0x31,0x06,0x12,0x41,0x51,0x07,0x61,0x71,
+			0x13,0x22,0x32,0x81,0x08,0x14,0x42,0x91,
+			0xa1,0xb1,0xc1,0x09,0x23,0x33,0x52,0xf0,
+			0x15,0x62,0x72,0xd1,0x0a,0x16,0x24,0x34,
+			0xe1,0x25,0xf1,0x17,0x18,0x19,0x1a,0x26,
+			0x27,0x28,0x29,0x2a,0x35,0x36,0x37,0x38,
+			0x39,0x3a,0x43,0x44,0x45,0x46,0x47,0x48,
+			0x49,0x4a,0x53,0x54,0x55,0x56,0x57,0x58,
+			0x59,0x5a,0x63,0x64,0x65,0x66,0x67,0x68,
+			0x69,0x6a,0x73,0x74,0x75,0x76,0x77,0x78,
+			0x79,0x7a,0x82,0x83,0x84,0x85,0x86,0x87,
+			0x88,0x89,0x8a,0x92,0x93,0x94,0x95,0x96,
+			0x97,0x98,0x99,0x9a,0xa2,0xa3,0xa4,0xa5,
+			0xa6,0xa7,0xa8,0xa9,0xaa,0xb2,0xb3,0xb4,
+			0xb5,0xb6,0xb7,0xb8,0xb9,0xba,0xc2,0xc3,
+			0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xd2,
+			0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,0xd9,0xda,
+			0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,
+			0xea,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,
+			0xf9,0xfa
+		];
+	
+	function initQuantTables(sf){
+			var YQT = [
+				16, 11, 10, 16, 24, 40, 51, 61,
+				12, 12, 14, 19, 26, 58, 60, 55,
+				14, 13, 16, 24, 40, 57, 69, 56,
+				14, 17, 22, 29, 51, 87, 80, 62,
+				18, 22, 37, 56, 68,109,103, 77,
+				24, 35, 55, 64, 81,104,113, 92,
+				49, 64, 78, 87,103,121,120,101,
+				72, 92, 95, 98,112,100,103, 99
+			];
+			
+			for (var i = 0; i < 64; i++) {
+				var t = ffloor((YQT[i]*sf+50)/100);
+				if (t < 1) {
+					t = 1;
+				} else if (t > 255) {
+					t = 255;
+				}
+				YTable[ZigZag[i]] = t;
+			}
+			var UVQT = [
+				17, 18, 24, 47, 99, 99, 99, 99,
+				18, 21, 26, 66, 99, 99, 99, 99,
+				24, 26, 56, 99, 99, 99, 99, 99,
+				47, 66, 99, 99, 99, 99, 99, 99,
+				99, 99, 99, 99, 99, 99, 99, 99,
+				99, 99, 99, 99, 99, 99, 99, 99,
+				99, 99, 99, 99, 99, 99, 99, 99,
+				99, 99, 99, 99, 99, 99, 99, 99
+			];
+			for (var j = 0; j < 64; j++) {
+				var u = ffloor((UVQT[j]*sf+50)/100);
+				if (u < 1) {
+					u = 1;
+				} else if (u > 255) {
+					u = 255;
+				}
+				UVTable[ZigZag[j]] = u;
+			}
+			var aasf = [
+				1.0, 1.387039845, 1.306562965, 1.175875602,
+				1.0, 0.785694958, 0.541196100, 0.275899379
+			];
+			var k = 0;
+			for (var row = 0; row < 8; row++)
+			{
+				for (var col = 0; col < 8; col++)
+				{
+					fdtbl_Y[k]  = (1.0 / (YTable [ZigZag[k]] * aasf[row] * aasf[col] * 8.0));
+					fdtbl_UV[k] = (1.0 / (UVTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0));
+					k++;
+				}
+			}
+		}
+		
+		function computeHuffmanTbl(nrcodes, std_table){
+			var codevalue = 0;
+			var pos_in_table = 0;
+			var HT = new Array();
+			for (var k = 1; k <= 16; k++) {
+				for (var j = 1; j <= nrcodes[k]; j++) {
+					HT[std_table[pos_in_table]] = [];
+					HT[std_table[pos_in_table]][0] = codevalue;
+					HT[std_table[pos_in_table]][1] = k;
+					pos_in_table++;
+					codevalue++;
+				}
+				codevalue*=2;
+			}
+			return HT;
+		}
+		
+		function initHuffmanTbl()
+		{
+			YDC_HT = computeHuffmanTbl(std_dc_luminance_nrcodes,std_dc_luminance_values);
+			UVDC_HT = computeHuffmanTbl(std_dc_chrominance_nrcodes,std_dc_chrominance_values);
+			YAC_HT = computeHuffmanTbl(std_ac_luminance_nrcodes,std_ac_luminance_values);
+			UVAC_HT = computeHuffmanTbl(std_ac_chrominance_nrcodes,std_ac_chrominance_values);
+		}
+	
+		function initCategoryNumber()
+		{
+			var nrlower = 1;
+			var nrupper = 2;
+			for (var cat = 1; cat <= 15; cat++) {
+				//Positive numbers
+				for (var nr = nrlower; nr<nrupper; nr++) {
+					category[32767+nr] = cat;
+					bitcode[32767+nr] = [];
+					bitcode[32767+nr][1] = cat;
+					bitcode[32767+nr][0] = nr;
+				}
+				//Negative numbers
+				for (var nrneg =-(nrupper-1); nrneg<=-nrlower; nrneg++) {
+					category[32767+nrneg] = cat;
+					bitcode[32767+nrneg] = [];
+					bitcode[32767+nrneg][1] = cat;
+					bitcode[32767+nrneg][0] = nrupper-1+nrneg;
+				}
+				nrlower <<= 1;
+				nrupper <<= 1;
+			}
+		}
+		
+		function initRGBYUVTable() {
+			for(var i = 0; i < 256;i++) {
+				RGB_YUV_TABLE[i]      		=  19595 * i;
+				RGB_YUV_TABLE[(i+ 256)>>0] 	=  38470 * i;
+				RGB_YUV_TABLE[(i+ 512)>>0] 	=   7471 * i + 0x8000;
+				RGB_YUV_TABLE[(i+ 768)>>0] 	= -11059 * i;
+				RGB_YUV_TABLE[(i+1024)>>0] 	= -21709 * i;
+				RGB_YUV_TABLE[(i+1280)>>0] 	=  32768 * i + 0x807FFF;
+				RGB_YUV_TABLE[(i+1536)>>0] 	= -27439 * i;
+				RGB_YUV_TABLE[(i+1792)>>0] 	= - 5329 * i;
+			}
+		}
+		
+		// IO functions
+		function writeBits(bs)
+		{
+			var value = bs[0];
+			var posval = bs[1]-1;
+			while ( posval >= 0 ) {
+				if (value & (1 << posval) ) {
+					bytenew |= (1 << bytepos);
+				}
+				posval--;
+				bytepos--;
+				if (bytepos < 0) {
+					if (bytenew == 0xFF) {
+						writeByte(0xFF);
+						writeByte(0);
+					}
+					else {
+						writeByte(bytenew);
+					}
+					bytepos=7;
+					bytenew=0;
+				}
+			}
+		}
+	
+		function writeByte(value)
+		{
+			//byteout.push(clt[value]); // write char directly instead of converting later
+      byteout.push(value);
+		}
+	
+		function writeWord(value)
+		{
+			writeByte((value>>8)&0xFF);
+			writeByte((value   )&0xFF);
+		}
+		
+		// DCT & quantization core
+		function fDCTQuant(data, fdtbl)
+		{
+			var d0, d1, d2, d3, d4, d5, d6, d7;
+			/* Pass 1: process rows. */
+			var dataOff=0;
+			var i;
+			var I8 = 8;
+			var I64 = 64;
+			for (i=0; i<I8; ++i)
+			{
+				d0 = data[dataOff];
+				d1 = data[dataOff+1];
+				d2 = data[dataOff+2];
+				d3 = data[dataOff+3];
+				d4 = data[dataOff+4];
+				d5 = data[dataOff+5];
+				d6 = data[dataOff+6];
+				d7 = data[dataOff+7];
+				
+				var tmp0 = d0 + d7;
+				var tmp7 = d0 - d7;
+				var tmp1 = d1 + d6;
+				var tmp6 = d1 - d6;
+				var tmp2 = d2 + d5;
+				var tmp5 = d2 - d5;
+				var tmp3 = d3 + d4;
+				var tmp4 = d3 - d4;
+	
+				/* Even part */
+				var tmp10 = tmp0 + tmp3;	/* phase 2 */
+				var tmp13 = tmp0 - tmp3;
+				var tmp11 = tmp1 + tmp2;
+				var tmp12 = tmp1 - tmp2;
+	
+				data[dataOff] = tmp10 + tmp11; /* phase 3 */
+				data[dataOff+4] = tmp10 - tmp11;
+	
+				var z1 = (tmp12 + tmp13) * 0.707106781; /* c4 */
+				data[dataOff+2] = tmp13 + z1; /* phase 5 */
+				data[dataOff+6] = tmp13 - z1;
+	
+				/* Odd part */
+				tmp10 = tmp4 + tmp5; /* phase 2 */
+				tmp11 = tmp5 + tmp6;
+				tmp12 = tmp6 + tmp7;
+	
+				/* The rotator is modified from fig 4-8 to avoid extra negations. */
+				var z5 = (tmp10 - tmp12) * 0.382683433; /* c6 */
+				var z2 = 0.541196100 * tmp10 + z5; /* c2-c6 */
+				var z4 = 1.306562965 * tmp12 + z5; /* c2+c6 */
+				var z3 = tmp11 * 0.707106781; /* c4 */
+	
+				var z11 = tmp7 + z3;	/* phase 5 */
+				var z13 = tmp7 - z3;
+	
+				data[dataOff+5] = z13 + z2;	/* phase 6 */
+				data[dataOff+3] = z13 - z2;
+				data[dataOff+1] = z11 + z4;
+				data[dataOff+7] = z11 - z4;
+	
+				dataOff += 8; /* advance pointer to next row */
+			}
+	
+			/* Pass 2: process columns. */
+			dataOff = 0;
+			for (i=0; i<I8; ++i)
+			{
+				d0 = data[dataOff];
+				d1 = data[dataOff + 8];
+				d2 = data[dataOff + 16];
+				d3 = data[dataOff + 24];
+				d4 = data[dataOff + 32];
+				d5 = data[dataOff + 40];
+				d6 = data[dataOff + 48];
+				d7 = data[dataOff + 56];
+				
+				var tmp0p2 = d0 + d7;
+				var tmp7p2 = d0 - d7;
+				var tmp1p2 = d1 + d6;
+				var tmp6p2 = d1 - d6;
+				var tmp2p2 = d2 + d5;
+				var tmp5p2 = d2 - d5;
+				var tmp3p2 = d3 + d4;
+				var tmp4p2 = d3 - d4;
+	
+				/* Even part */
+				var tmp10p2 = tmp0p2 + tmp3p2;	/* phase 2 */
+				var tmp13p2 = tmp0p2 - tmp3p2;
+				var tmp11p2 = tmp1p2 + tmp2p2;
+				var tmp12p2 = tmp1p2 - tmp2p2;
+	
+				data[dataOff] = tmp10p2 + tmp11p2; /* phase 3 */
+				data[dataOff+32] = tmp10p2 - tmp11p2;
+	
+				var z1p2 = (tmp12p2 + tmp13p2) * 0.707106781; /* c4 */
+				data[dataOff+16] = tmp13p2 + z1p2; /* phase 5 */
+				data[dataOff+48] = tmp13p2 - z1p2;
+	
+				/* Odd part */
+				tmp10p2 = tmp4p2 + tmp5p2; /* phase 2 */
+				tmp11p2 = tmp5p2 + tmp6p2;
+				tmp12p2 = tmp6p2 + tmp7p2;
+	
+				/* The rotator is modified from fig 4-8 to avoid extra negations. */
+				var z5p2 = (tmp10p2 - tmp12p2) * 0.382683433; /* c6 */
+				var z2p2 = 0.541196100 * tmp10p2 + z5p2; /* c2-c6 */
+				var z4p2 = 1.306562965 * tmp12p2 + z5p2; /* c2+c6 */
+				var z3p2 = tmp11p2 * 0.707106781; /* c4 */
+	
+				var z11p2 = tmp7p2 + z3p2;	/* phase 5 */
+				var z13p2 = tmp7p2 - z3p2;
+	
+				data[dataOff+40] = z13p2 + z2p2; /* phase 6 */
+				data[dataOff+24] = z13p2 - z2p2;
+				data[dataOff+ 8] = z11p2 + z4p2;
+				data[dataOff+56] = z11p2 - z4p2;
+	
+				dataOff++; /* advance pointer to next column */
+			}
+	
+			// Quantize/descale the coefficients
+			var fDCTQuant;
+			for (i=0; i<I64; ++i)
+			{
+				// Apply the quantization and scaling factor & Round to nearest integer
+				fDCTQuant = data[i]*fdtbl[i];
+				outputfDCTQuant[i] = (fDCTQuant > 0.0) ? ((fDCTQuant + 0.5)|0) : ((fDCTQuant - 0.5)|0);
+				//outputfDCTQuant[i] = fround(fDCTQuant);
+
+			}
+			return outputfDCTQuant;
+		}
+		
+		function writeAPP0()
+		{
+			writeWord(0xFFE0); // marker
+			writeWord(16); // length
+			writeByte(0x4A); // J
+			writeByte(0x46); // F
+			writeByte(0x49); // I
+			writeByte(0x46); // F
+			writeByte(0); // = "JFIF",'\0'
+			writeByte(1); // versionhi
+			writeByte(1); // versionlo
+			writeByte(0); // xyunits
+			writeWord(1); // xdensity
+			writeWord(1); // ydensity
+			writeByte(0); // thumbnwidth
+			writeByte(0); // thumbnheight
+		}
+
+		function writeAPP1(exifBuffer) {
+			if (!exifBuffer) return;
+
+			writeWord(0xFFE1); // APP1 marker
+
+			if (exifBuffer[0] === 0x45 &&
+					exifBuffer[1] === 0x78 &&
+					exifBuffer[2] === 0x69 &&
+					exifBuffer[3] === 0x66) {
+				// Buffer already starts with EXIF, just use it directly
+				writeWord(exifBuffer.length + 2); // length is buffer + length itself!
+			} else {
+				// Buffer doesn't start with EXIF, write it for them
+				writeWord(exifBuffer.length + 5 + 2); // length is buffer + EXIF\0 + length itself!
+				writeByte(0x45); // E
+				writeByte(0x78); // X
+				writeByte(0x69); // I
+				writeByte(0x66); // F
+				writeByte(0); // = "EXIF",'\0'
+			}
+
+			for (var i = 0; i < exifBuffer.length; i++) {
+				writeByte(exifBuffer[i]);
+			}
+		}
+
+		function writeSOF0(width, height)
+		{
+			writeWord(0xFFC0); // marker
+			writeWord(17);   // length, truecolor YUV JPG
+			writeByte(8);    // precision
+			writeWord(height);
+			writeWord(width);
+			writeByte(3);    // nrofcomponents
+			writeByte(1);    // IdY
+			writeByte(0x11); // HVY
+			writeByte(0);    // QTY
+			writeByte(2);    // IdU
+			writeByte(0x11); // HVU
+			writeByte(1);    // QTU
+			writeByte(3);    // IdV
+			writeByte(0x11); // HVV
+			writeByte(1);    // QTV
+		}
+	
+		function writeDQT()
+		{
+			writeWord(0xFFDB); // marker
+			writeWord(132);	   // length
+			writeByte(0);
+			for (var i=0; i<64; i++) {
+				writeByte(YTable[i]);
+			}
+			writeByte(1);
+			for (var j=0; j<64; j++) {
+				writeByte(UVTable[j]);
+			}
+		}
+	
+		function writeDHT()
+		{
+			writeWord(0xFFC4); // marker
+			writeWord(0x01A2); // length
+	
+			writeByte(0); // HTYDCinfo
+			for (var i=0; i<16; i++) {
+				writeByte(std_dc_luminance_nrcodes[i+1]);
+			}
+			for (var j=0; j<=11; j++) {
+				writeByte(std_dc_luminance_values[j]);
+			}
+	
+			writeByte(0x10); // HTYACinfo
+			for (var k=0; k<16; k++) {
+				writeByte(std_ac_luminance_nrcodes[k+1]);
+			}
+			for (var l=0; l<=161; l++) {
+				writeByte(std_ac_luminance_values[l]);
+			}
+	
+			writeByte(1); // HTUDCinfo
+			for (var m=0; m<16; m++) {
+				writeByte(std_dc_chrominance_nrcodes[m+1]);
+			}
+			for (var n=0; n<=11; n++) {
+				writeByte(std_dc_chrominance_values[n]);
+			}
+	
+			writeByte(0x11); // HTUACinfo
+			for (var o=0; o<16; o++) {
+				writeByte(std_ac_chrominance_nrcodes[o+1]);
+			}
+			for (var p=0; p<=161; p++) {
+				writeByte(std_ac_chrominance_values[p]);
+			}
+		}
+		
+		function writeCOM(comments)
+		{
+			if (typeof comments === "undefined" || comments.constructor !== Array) return;
+			comments.forEach(e => {
+				if (typeof e !== "string") return;
+				writeWord(0xFFFE); // marker
+				var l = e.length;
+				writeWord(l + 2); // length itself as well
+				var i;
+				for (i = 0; i < l; i++)
+					writeByte(e.charCodeAt(i));
+			});
+		}
+	
+		function writeSOS()
+		{
+			writeWord(0xFFDA); // marker
+			writeWord(12); // length
+			writeByte(3); // nrofcomponents
+			writeByte(1); // IdY
+			writeByte(0); // HTY
+			writeByte(2); // IdU
+			writeByte(0x11); // HTU
+			writeByte(3); // IdV
+			writeByte(0x11); // HTV
+			writeByte(0); // Ss
+			writeByte(0x3f); // Se
+			writeByte(0); // Bf
+		}
+		
+		function processDU(CDU, fdtbl, DC, HTDC, HTAC){
+			var EOB = HTAC[0x00];
+			var M16zeroes = HTAC[0xF0];
+			var pos;
+			var I16 = 16;
+			var I63 = 63;
+			var I64 = 64;
+			var DU_DCT = fDCTQuant(CDU, fdtbl);
+			//ZigZag reorder
+			for (var j=0;j<I64;++j) {
+				DU[ZigZag[j]]=DU_DCT[j];
+			}
+			var Diff = DU[0] - DC; DC = DU[0];
+			//Encode DC
+			if (Diff==0) {
+				writeBits(HTDC[0]); // Diff might be 0
+			} else {
+				pos = 32767+Diff;
+				writeBits(HTDC[category[pos]]);
+				writeBits(bitcode[pos]);
+			}
+			//Encode ACs
+			var end0pos = 63; // was const... which is crazy
+			for (; (end0pos>0)&&(DU[end0pos]==0); end0pos--) {};
+			//end0pos = first element in reverse order !=0
+			if ( end0pos == 0) {
+				writeBits(EOB);
+				return DC;
+			}
+			var i = 1;
+			var lng;
+			while ( i <= end0pos ) {
+				var startpos = i;
+				for (; (DU[i]==0) && (i<=end0pos); ++i) {}
+				var nrzeroes = i-startpos;
+				if ( nrzeroes >= I16 ) {
+					lng = nrzeroes>>4;
+					for (var nrmarker=1; nrmarker <= lng; ++nrmarker)
+						writeBits(M16zeroes);
+					nrzeroes = nrzeroes&0xF;
+				}
+				pos = 32767+DU[i];
+				writeBits(HTAC[(nrzeroes<<4)+category[pos]]);
+				writeBits(bitcode[pos]);
+				i++;
+			}
+			if ( end0pos != I63 ) {
+				writeBits(EOB);
+			}
+			return DC;
+		}
+
+		function initCharLookupTable(){
+			var sfcc = String.fromCharCode;
+			for(var i=0; i < 256; i++){ ///// ACHTUNG // 255
+				clt[i] = sfcc(i);
+			}
+		}
+		
+		this.encode = function(image,quality) // image data object
+		{
+			var time_start = new Date().getTime();
+			
+			if(quality) setQuality(quality);
+			
+			// Initialize bit writer
+			byteout = new Array();
+			bytenew=0;
+			bytepos=7;
+	
+			// Add JPEG headers
+			writeWord(0xFFD8); // SOI
+			writeAPP0();
+			writeCOM(image.comments);
+			writeAPP1(image.exifBuffer);
+			writeDQT();
+			writeSOF0(image.width,image.height);
+			writeDHT();
+			writeSOS();
+
+	
+			// Encode 8x8 macroblocks
+			var DCY=0;
+			var DCU=0;
+			var DCV=0;
+			
+			bytenew=0;
+			bytepos=7;
+			
+			
+			this.encode.displayName = "_encode_";
+
+			var imageData = image.data;
+			var width = image.width;
+			var height = image.height;
+
+			var quadWidth = width*4;
+			var tripleWidth = width*3;
+			
+			var x, y = 0;
+			var r, g, b;
+			var start,p, col,row,pos;
+			while(y < height){
+				x = 0;
+				while(x < quadWidth){
+				start = quadWidth * y + x;
+				p = start;
+				col = -1;
+				row = 0;
+				
+				for(pos=0; pos < 64; pos++){
+					row = pos >> 3;// /8
+					col = ( pos & 7 ) * 4; // %8
+					p = start + ( row * quadWidth ) + col;		
+					
+					if(y+row >= height){ // padding bottom
+						p-= (quadWidth*(y+1+row-height));
+					}
+
+					if(x+col >= quadWidth){ // padding right	
+						p-= ((x+col) - quadWidth +4)
+					}
+					
+					r = imageData[ p++ ];
+					g = imageData[ p++ ];
+					b = imageData[ p++ ];
+					
+					
+					/* // calculate YUV values dynamically
+					YDU[pos]=((( 0.29900)*r+( 0.58700)*g+( 0.11400)*b))-128; //-0x80
+					UDU[pos]=(((-0.16874)*r+(-0.33126)*g+( 0.50000)*b));
+					VDU[pos]=((( 0.50000)*r+(-0.41869)*g+(-0.08131)*b));
+					*/
+					
+					// use lookup table (slightly faster)
+					YDU[pos] = ((RGB_YUV_TABLE[r]             + RGB_YUV_TABLE[(g +  256)>>0] + RGB_YUV_TABLE[(b +  512)>>0]) >> 16)-128;
+					UDU[pos] = ((RGB_YUV_TABLE[(r +  768)>>0] + RGB_YUV_TABLE[(g + 1024)>>0] + RGB_YUV_TABLE[(b + 1280)>>0]) >> 16)-128;
+					VDU[pos] = ((RGB_YUV_TABLE[(r + 1280)>>0] + RGB_YUV_TABLE[(g + 1536)>>0] + RGB_YUV_TABLE[(b + 1792)>>0]) >> 16)-128;
+
+				}
+				
+				DCY = processDU(YDU, fdtbl_Y, DCY, YDC_HT, YAC_HT);
+				DCU = processDU(UDU, fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
+				DCV = processDU(VDU, fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
+				x+=32;
+				}
+				y+=8;
+			}
+			
+			
+			////////////////////////////////////////////////////////////////
+	
+			// Do the bit alignment of the EOI marker
+			if ( bytepos >= 0 ) {
+				var fillbits = [];
+				fillbits[1] = bytepos+1;
+				fillbits[0] = (1<<(bytepos+1))-1;
+				writeBits(fillbits);
+			}
+	
+			writeWord(0xFFD9); //EOI
+
+			if (typeof module === 'undefined') return new Uint8Array(byteout);
+      return Buffer.from(byteout);
+
+			var jpegDataUri = 'data:image/jpeg;base64,' + btoa(byteout.join(''));
+			
+			byteout = [];
+			
+			// benchmarking
+			var duration = new Date().getTime() - time_start;
+    		//console.log('Encoding time: '+ duration + 'ms');
+    		//
+			
+			return jpegDataUri			
+	}
+	
+	function setQuality(quality){
+		if (quality <= 0) {
+			quality = 1;
+		}
+		if (quality > 100) {
+			quality = 100;
+		}
+		
+		if(currentQuality == quality) return // don't recalc if unchanged
+		
+		var sf = 0;
+		if (quality < 50) {
+			sf = Math.floor(5000 / quality);
+		} else {
+			sf = Math.floor(200 - quality*2);
+		}
+		
+		initQuantTables(sf);
+		currentQuality = quality;
+		//console.log('Quality set to: '+quality +'%');
+	}
+	
+	function init(){
+		var time_start = new Date().getTime();
+		if(!quality) quality = 50;
+		// Create tables
+		initCharLookupTable()
+		initHuffmanTbl();
+		initCategoryNumber();
+		initRGBYUVTable();
+		
+		setQuality(quality);
+		var duration = new Date().getTime() - time_start;
+    	//console.log('Initialization '+ duration + 'ms');
+	}
+	
+	init();
+	
+};
+
+if (typeof module !== 'undefined') {
+	module.exports = encode;
+} else if (typeof window !== 'undefined') {
+	window['jpeg-js'] = window['jpeg-js'] || {};
+	window['jpeg-js'].encode = encode;
+}
+
+function encode(imgData, qu) {
+  if (typeof qu === 'undefined') qu = 50;
+  var encoder = new JPEGEncoder(qu);
+	var data = encoder.encode(imgData, qu);
+  return {
+    data: data,
+    width: imgData.width,
+    height: imgData.height,
+  };
+}
+
+// helper function to get the imageData of an existing image on the current page.
+function getImageDataFromImage(idOrElement){
+	var theImg = (typeof(idOrElement)=='string')? document.getElementById(idOrElement):idOrElement;
+	var cvs = document.createElement('canvas');
+	cvs.width = theImg.width;
+	cvs.height = theImg.height;
+	var ctx = cvs.getContext("2d");
+	ctx.drawImage(theImg,0,0);
+	
+	return (ctx.getImageData(0, 0, cvs.width, cvs.height));
+}
+  </script>
+  <script>
+    (() => {
+      'use strict';
+
+      const WIDTH = 240;
+      const HEIGHT = 320;
+      const RAW_LENGTH = WIDTH * HEIGHT * 2;
+      const HEADER_LENGTH = 16;
+      const MAIN_IMAGE_WIDTH = 432;
+      const MAIN_IMAGE_HEIGHT = 576;
+      const SUB_IMAGE_WIDTH = 1140;
+      const SUB_IMAGE_HEIGHT = 576;
+      const IMAGE_DPI = 216;
+      const PNG_PIXELS_PER_METER = 8504;
+      const PNG_GAMMA = 45455;
+      const PNG_PALETTE_COLORS = 252;
+
+      const elements = {
+        themeInput: document.getElementById('themeInput'),
+        imageInput: document.getElementById('imageInput'),
+        themeFileName: document.getElementById('themeFileName'),
+        packButton: document.getElementById('packButton'),
+        restoreButton: document.getElementById('restoreButton'),
+        pngButton: document.getElementById('pngButton'),
+        previewCanvas: document.getElementById('previewCanvas'),
+        canvasFrame: document.getElementById('canvasFrame'),
+        emptyState: document.getElementById('emptyState'),
+        statusBadge: document.getElementById('statusBadge'),
+        pixelPosition: document.getElementById('pixelPosition'),
+        zoomRange: document.getElementById('zoomRange'),
+        zoomValue: document.getElementById('zoomValue'),
+        offsetXRange: document.getElementById('offsetXRange'),
+        offsetXValue: document.getElementById('offsetXValue'),
+        offsetYRange: document.getElementById('offsetYRange'),
+        offsetYValue: document.getElementById('offsetYValue'),
+        backgroundColor: document.getElementById('backgroundColor'),
+        resetPositionButton: document.getElementById('resetPositionButton'),
+        headerValue: document.getElementById('headerValue'),
+        rawSize: document.getElementById('rawSize'),
+        packedSize: document.getElementById('packedSize'),
+        reservedValue: document.getElementById('reservedValue'),
+        outputName: document.getElementById('outputName'),
+        themeName: document.getElementById('themeName'),
+        themeNameEn: document.getElementById('themeNameEn'),
+        themeConfig: document.getElementById('themeConfig'),
+        resourceBaseUrl: document.getElementById('resourceBaseUrl'),
+        mainImageButton: document.getElementById('mainImageButton'),
+        subImageButton: document.getElementById('subImageButton'),
+        packageButton: document.getElementById('packageButton'),
+        message: document.getElementById('message'),
+        fitButtons: Array.from(document.querySelectorAll('[data-fit]'))
+      };
+
+      const context = elements.previewCanvas.getContext('2d', { alpha: false, willReadFrequently: true });
+      const state = {
+        header: null,
+        originalCanvas: null,
+        source: null,
+        fit: 'cover',
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+        background: '#000000',
+        dragging: false,
+        dragX: 0,
+        dragY: 0,
+        baseOffsetX: 0,
+        baseOffsetY: 0
+      };
+
+      function setMessage(text, tone = '') {
+        elements.message.textContent = text;
+        elements.message.className = `message${tone ? ` is-${tone}` : ''}`;
+      }
+
+      function formatBytes(bytes) {
+        return `${new Intl.NumberFormat('zh-CN').format(bytes)} 字节`;
+      }
+
+      function hex32(value) {
+        return `0x${value.toString(16).toUpperCase().padStart(8, '0')}`;
+      }
+
+      function updateControls() {
+        elements.zoomRange.value = Math.round(state.zoom * 100);
+        elements.zoomValue.value = `${Math.round(state.zoom * 100)}%`;
+        elements.offsetXRange.value = Math.round(state.offsetX);
+        elements.offsetXValue.value = `${Math.round(state.offsetX)} px`;
+        elements.offsetYRange.value = Math.round(state.offsetY);
+        elements.offsetYValue.value = `${Math.round(state.offsetY)} px`;
+        elements.fitButtons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.fit === state.fit));
+        });
+      }
+
+      function resetPlacement(render = true) {
+        state.zoom = 1;
+        state.offsetX = 0;
+        state.offsetY = 0;
+        updateControls();
+        if (render) renderCanvas();
+      }
+
+      function renderComposition(targetContext, targetWidth, targetHeight) {
+        targetContext.save();
+        targetContext.fillStyle = state.background;
+        targetContext.fillRect(0, 0, targetWidth, targetHeight);
+
+        if (state.source) {
+          const sourceWidth = state.source.width;
+          const sourceHeight = state.source.height;
+          let drawWidth;
+          let drawHeight;
+
+          if (state.fit === 'stretch') {
+            drawWidth = WIDTH * state.zoom;
+            drawHeight = HEIGHT * state.zoom;
+          } else {
+            const baseScale = state.fit === 'contain'
+              ? Math.min(WIDTH / sourceWidth, HEIGHT / sourceHeight)
+              : Math.max(WIDTH / sourceWidth, HEIGHT / sourceHeight);
+            drawWidth = sourceWidth * baseScale * state.zoom;
+            drawHeight = sourceHeight * baseScale * state.zoom;
+          }
+
+          const x = ((WIDTH - drawWidth) / 2) + state.offsetX;
+          const y = ((HEIGHT - drawHeight) / 2) + state.offsetY;
+          const scaleX = targetWidth / WIDTH;
+          const scaleY = targetHeight / HEIGHT;
+          targetContext.imageSmoothingEnabled = true;
+          targetContext.imageSmoothingQuality = 'high';
+          targetContext.drawImage(state.source, x * scaleX, y * scaleY, drawWidth * scaleX, drawHeight * scaleY);
+        }
+        targetContext.restore();
+      }
+
+      function renderCanvas() {
+        renderComposition(context, WIDTH, HEIGHT);
+      }
+
+      function rawRgb565ToCanvas(raw) {
+        const canvas = document.createElement('canvas');
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        const sourceContext = canvas.getContext('2d', { alpha: false });
+        const imageData = sourceContext.createImageData(WIDTH, HEIGHT);
+        const rgba = imageData.data;
+
+        for (let pixel = 0, rawOffset = 0, rgbaOffset = 0; pixel < WIDTH * HEIGHT; pixel++, rawOffset += 2, rgbaOffset += 4) {
+          const value = raw[rawOffset] | (raw[rawOffset + 1] << 8);
+          const r5 = (value >>> 11) & 0x1f;
+          const g6 = (value >>> 5) & 0x3f;
+          const b5 = value & 0x1f;
+          rgba[rgbaOffset] = Math.floor((r5 * 255 + 15) / 31);
+          rgba[rgbaOffset + 1] = Math.floor((g6 * 255 + 31) / 63);
+          rgba[rgbaOffset + 2] = Math.floor((b5 * 255 + 15) / 31);
+          rgba[rgbaOffset + 3] = 255;
+        }
+
+        sourceContext.putImageData(imageData, 0, 0);
+        return canvas;
+      }
+
+      function canvasToRawRgb565() {
+        const rgba = context.getImageData(0, 0, WIDTH, HEIGHT).data;
+        const raw = new Uint8Array(RAW_LENGTH);
+
+        for (let pixel = 0, rawOffset = 0, rgbaOffset = 0; pixel < WIDTH * HEIGHT; pixel++, rawOffset += 2, rgbaOffset += 4) {
+          const r5 = Math.floor((rgba[rgbaOffset] * 31 + 127) / 255);
+          const g6 = Math.floor((rgba[rgbaOffset + 1] * 63 + 127) / 255);
+          const b5 = Math.floor((rgba[rgbaOffset + 2] * 31 + 127) / 255);
+          const value = (r5 << 11) | (g6 << 5) | b5;
+          raw[rawOffset] = value & 0xff;
+          raw[rawOffset + 1] = value >>> 8;
+        }
+        return raw;
+      }
+
+      function createCanvas(width, height) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        return canvas;
+      }
+
+      function createMainImageCanvas() {
+        const canvas = createCanvas(MAIN_IMAGE_WIDTH, MAIN_IMAGE_HEIGHT);
+        const imageContext = canvas.getContext('2d', { alpha: false });
+        renderComposition(imageContext, canvas.width, canvas.height);
+        return canvas;
+      }
+
+      function drawSubImageBackground(targetContext, width, height) {
+        const background = targetContext.createImageData(width, height);
+        const rgba = background.data;
+        const alphaByX = new Uint8Array(width);
+        alphaByX.fill(255);
+        alphaByX.fill(13, 432, 456);
+        alphaByX[671] = 104;
+        alphaByX[672] = 13;
+        alphaByX[673] = 225;
+        alphaByX[888] = 134;
+        alphaByX[889] = 13;
+        alphaByX[890] = 195;
+        alphaByX[1105] = 164;
+        alphaByX.fill(13, 1106, 1121);
+        alphaByX[1121] = 39;
+        alphaByX.fill(13, 1122, width);
+
+        for (let y = 0, offset = 0; y < height; y++) {
+          for (let x = 0; x < width; x++, offset += 4) {
+            rgba[offset + 3] = alphaByX[x];
+          }
+        }
+        targetContext.putImageData(background, 0, 0);
+      }
+
+      function roundedRectPath(targetContext, x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+        targetContext.beginPath();
+        targetContext.moveTo(x + r, y);
+        targetContext.lineTo(x + width - r, y);
+        targetContext.quadraticCurveTo(x + width, y, x + width, y + r);
+        targetContext.lineTo(x + width, y + height - r);
+        targetContext.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        targetContext.lineTo(x + r, y + height);
+        targetContext.quadraticCurveTo(x, y + height, x, y + height - r);
+        targetContext.lineTo(x, y + r);
+        targetContext.quadraticCurveTo(x, y, x + r, y);
+        targetContext.closePath();
+      }
+
+      function fillRoundedRect(targetContext, x, y, width, height, radius, color) {
+        roundedRectPath(targetContext, x, y, width, height, radius);
+        targetContext.fillStyle = color;
+        targetContext.fill();
+      }
+
+      function drawWifi(targetContext, x, y) {
+        targetContext.save();
+        targetContext.strokeStyle = '#ffffff';
+        targetContext.fillStyle = '#ffffff';
+        targetContext.lineWidth = 2;
+        targetContext.lineCap = 'round';
+        for (let radius = 12; radius >= 5; radius -= 4) {
+          targetContext.beginPath();
+          targetContext.arc(x, y, radius, Math.PI * 1.18, Math.PI * 1.82);
+          targetContext.stroke();
+        }
+        targetContext.beginPath();
+        targetContext.arc(x, y + 1, 1.7, 0, Math.PI * 2);
+        targetContext.fill();
+        targetContext.restore();
+      }
+
+      function drawCloud(targetContext, x, y) {
+        targetContext.save();
+        targetContext.strokeStyle = '#ffffff';
+        targetContext.lineWidth = 2;
+        targetContext.beginPath();
+        targetContext.moveTo(x + 14, y + 38);
+        targetContext.bezierCurveTo(x + 2, y + 38, x + 2, y + 19, x + 18, y + 18);
+        targetContext.bezierCurveTo(x + 22, y + 3, x + 45, y + 1, x + 52, y + 16);
+        targetContext.bezierCurveTo(x + 69, y + 13, x + 79, y + 24, x + 77, y + 35);
+        targetContext.bezierCurveTo(x + 76, y + 40, x + 70, y + 43, x + 64, y + 43);
+        targetContext.lineTo(x + 15, y + 43);
+        targetContext.stroke();
+        targetContext.restore();
+      }
+
+      function createSubImageCanvas() {
+        const canvas = createCanvas(SUB_IMAGE_WIDTH, SUB_IMAGE_HEIGHT);
+        const subContext = canvas.getContext('2d');
+        const mainCanvas = createMainImageCanvas();
+        drawSubImageBackground(subContext, canvas.width, canvas.height);
+
+        // Home screen preview.
+        subContext.drawImage(mainCanvas, 26, 0, 380, 576, 0, 0, 380, 576);
+        subContext.fillStyle = '#ffffff';
+        subContext.font = '400 104px "Helvetica Neue", Arial, sans-serif';
+        subContext.fillText('09', 8, 104);
+        subContext.fillText('57', 8, 204);
+        subContext.font = '400 29px "Helvetica Neue", "Microsoft YaHei", sans-serif';
+        subContext.fillText('门厅', 338, 101);
+        drawCloud(subContext, 14, 324);
+        subContext.font = '400 57px "Helvetica Neue", Arial, sans-serif';
+        subContext.fillText('25°C', 12, 473);
+        subContext.font = '400 27px "Helvetica Neue", "Microsoft YaHei", sans-serif';
+        subContext.fillText('星期四', 14, 515);
+        subContext.font = '400 36px "Helvetica Neue", Arial, sans-serif';
+        subContext.fillText('23/08/31', 14, 558);
+
+        // Room screen preview.
+        drawWifi(subContext, 398, 33);
+        subContext.drawImage(mainCanvas, 106, 0, 220, 576, 472, 22, 144, 216);
+        subContext.font = '400 29px "Helvetica Neue", "Microsoft YaHei", sans-serif';
+        subContext.fillText('客厅', 356, 289);
+        subContext.fillText('餐厅', 340, 495);
+
+        // Control screen preview.
+        fillRoundedRect(subContext, 691, 16, 51, 51, 10, '#ffc95e');
+        fillRoundedRect(subContext, 755, 16, 51, 51, 10, '#d78143');
+        fillRoundedRect(subContext, 819, 16, 51, 51, 10, '#363636');
+        subContext.strokeStyle = '#ffffff';
+        subContext.lineWidth = 1.5;
+        subContext.beginPath();
+        subContext.arc(716, 41, 10, 0, Math.PI * 2);
+        subContext.stroke();
+        subContext.beginPath();
+        subContext.arc(780, 41, 12, Math.PI * 0.45, Math.PI * 1.55);
+        subContext.stroke();
+        fillRoundedRect(subContext, 691, 81, 179, 51, 9, '#3a3a3a');
+        subContext.fillStyle = '#ffffff';
+        subContext.fillRect(691, 81, 108, 51);
+        fillRoundedRect(subContext, 896, 180, 204, 68, 18, '#d78143');
+        fillRoundedRect(subContext, 679, 435, 203, 67, 15, '#d78143');
+        fillRoundedRect(subContext, 896, 436, 101, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 1000, 436, 100, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 462, 470, 99, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 566, 470, 99, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 679, 506, 100, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 783, 506, 99, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 896, 506, 101, 66, 15, '#d78143');
+        fillRoundedRect(subContext, 1000, 506, 100, 66, 15, '#d78143');
+        for (let index = 0; index < 3; index++) {
+          fillRoundedRect(subContext, 1114, 225 + (index * 46), 15, 30, 7, '#ffffff');
+          fillRoundedRect(subContext, 1117, 228 + (index * 46), 9, 24, 5, '#66a2ff');
+        }
+        return canvas;
+      }
+
+      function dataUrlToBlob(dataUrl) {
+        const parts = dataUrl.split(',');
+        const mimeMatch = parts[0].match(/data:([^;]+)/);
+        const binary = atob(parts[1]);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+        return new Blob([bytes], { type: mimeMatch ? mimeMatch[1] : 'application/octet-stream' });
+      }
+
+      function canvasToBlobCompat(canvas, type, quality) {
+        if (typeof canvas.toBlob === 'function') {
+          return new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('图片编码失败')), type, quality);
+          });
+        }
+        return Promise.resolve(dataUrlToBlob(canvas.toDataURL(type, quality)));
+      }
+
+      function readUint16BE(bytes, offset) {
+        return (bytes[offset] << 8) | bytes[offset + 1];
+      }
+
+      function readUint32BE(bytes, offset) {
+        return (bytes[offset] * 0x1000000)
+          + ((bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3]);
+      }
+
+      function writeUint32BE(bytes, offset, value) {
+        bytes[offset] = (value >>> 24) & 0xff;
+        bytes[offset + 1] = (value >>> 16) & 0xff;
+        bytes[offset + 2] = (value >>> 8) & 0xff;
+        bytes[offset + 3] = value & 0xff;
+      }
+
+      function concatBytes(parts) {
+        const length = parts.reduce((total, part) => total + part.length, 0);
+        const output = new Uint8Array(length);
+        let offset = 0;
+        parts.forEach((part) => {
+          output.set(part, offset);
+          offset += part.length;
+        });
+        return output;
+      }
+
+      function makeJpegSegment(marker, payload) {
+        const output = new Uint8Array(payload.length + 4);
+        output[0] = 0xff;
+        output[1] = marker;
+        output[2] = ((payload.length + 2) >>> 8) & 0xff;
+        output[3] = (payload.length + 2) & 0xff;
+        output.set(payload, 4);
+        return output;
+      }
+
+      function splitJpegTables(payload, marker) {
+        const segments = [];
+        let offset = 0;
+        while (offset < payload.length) {
+          const start = offset;
+          if (marker === 0xdb) {
+            const precision = payload[offset] >>> 4;
+            offset += 1 + (precision === 0 ? 64 : 128);
+          } else {
+            offset++;
+            let symbolCount = 0;
+            for (let index = 0; index < 16; index++) symbolCount += payload[offset + index];
+            offset += 16 + symbolCount;
+          }
+          if (offset > payload.length) throw new Error('JPEG 表数据不完整');
+          segments.push(makeJpegSegment(marker, payload.slice(start, offset)));
+        }
+        return segments;
+      }
+
+      function normalizeReferenceJpeg(encoded) {
+        const bytes = encoded instanceof Uint8Array ? encoded : new Uint8Array(encoded);
+        if (bytes[0] !== 0xff || bytes[1] !== 0xd8) throw new Error('JPEG 编码器输出无效');
+
+        const quantizationTables = [];
+        const huffmanTables = [];
+        let frameHeader;
+        let scanData;
+        let offset = 2;
+        while (offset < bytes.length) {
+          const segmentStart = offset;
+          if (bytes[offset] !== 0xff) throw new Error('JPEG 标记无效');
+          while (bytes[offset] === 0xff) offset++;
+          const marker = bytes[offset++];
+          if (marker === 0xda) {
+            scanData = bytes.slice(segmentStart);
+            break;
+          }
+          const length = readUint16BE(bytes, offset);
+          const segmentEnd = offset + length;
+          if (length < 2 || segmentEnd > bytes.length) throw new Error('JPEG 段长度无效');
+          const payload = bytes.slice(offset + 2, segmentEnd);
+          if (marker === 0xdb) quantizationTables.push(...splitJpegTables(payload, marker));
+          if (marker === 0xc0) frameHeader = bytes.slice(segmentStart, segmentEnd);
+          if (marker === 0xc4) huffmanTables.push(...splitJpegTables(payload, marker));
+          offset = segmentEnd;
+        }
+
+        if (quantizationTables.length !== 2 || huffmanTables.length !== 4 || !frameHeader || !scanData) {
+          throw new Error('JPEG 编码器输出结构与原主题不兼容');
+        }
+
+        const jfif = makeJpegSegment(0xe0, new Uint8Array([
+          0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x02, 0x01,
+          0x00, IMAGE_DPI, 0x00, IMAGE_DPI, 0x00, 0x00
+        ]));
+        return concatBytes([
+          new Uint8Array([0xff, 0xd8]),
+          jfif,
+          ...quantizationTables,
+          frameHeader,
+          ...huffmanTables,
+          scanData
+        ]);
+      }
+
+      function assertReferenceJpeg(bytes) {
+        const expectedMarkers = [0xe0, 0xdb, 0xdb, 0xc0, 0xc4, 0xc4, 0xc4, 0xc4, 0xda];
+        const markers = [];
+        let offset = 2;
+        while (offset < bytes.length) {
+          while (bytes[offset] === 0xff) offset++;
+          const marker = bytes[offset++];
+          markers.push(marker);
+          if (marker === 0xda) break;
+          const length = readUint16BE(bytes, offset);
+          if (marker === 0xe0) {
+            const payload = bytes.subarray(offset + 2, offset + length);
+            if (payload[5] !== 1 || payload[6] !== 2 || payload[7] !== 1
+              || readUint16BE(payload, 8) !== IMAGE_DPI || readUint16BE(payload, 10) !== IMAGE_DPI) {
+              throw new Error('main.jpg 的 JFIF/DPI 自检失败');
+            }
+          }
+          if (marker === 0xdb) {
+            const payload = bytes.subarray(offset + 2, offset + length);
+            for (let index = 1; index < payload.length; index++) {
+              if (payload[index] !== 1) throw new Error('main.jpg 的量化表不是原件质量 100');
+            }
+          }
+          if (marker === 0xc0) {
+            const payload = bytes.subarray(offset + 2, offset + length);
+            if (payload[0] !== 8 || readUint16BE(payload, 1) !== MAIN_IMAGE_HEIGHT
+              || readUint16BE(payload, 3) !== MAIN_IMAGE_WIDTH || payload[5] !== 3
+              || payload[7] !== 0x11 || payload[10] !== 0x11 || payload[13] !== 0x11) {
+              throw new Error('main.jpg 的尺寸或 4:4:4 采样自检失败');
+            }
+          }
+          offset += length;
+        }
+        if (markers.length !== expectedMarkers.length
+          || markers.some((marker, index) => marker !== expectedMarkers[index])) {
+          throw new Error('main.jpg 的 JPEG 标记顺序自检失败');
+        }
+      }
+
+      function encodeMainImage(canvas) {
+        const encoder = window['jpeg-js'] && window['jpeg-js'].encode;
+        if (!encoder) throw new Error('JPEG 严格格式编码器不可用');
+        const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+        const encoded = encoder({ data: imageData.data, width: canvas.width, height: canvas.height }, 100);
+        const bytes = normalizeReferenceJpeg(encoded.data);
+        assertReferenceJpeg(bytes);
+        return new Blob([bytes], { type: 'image/jpeg' });
+      }
+
+      const PNG_CRC_TABLE = (() => {
+        const table = new Uint32Array(256);
+        for (let index = 0; index < table.length; index++) {
+          let value = index;
+          for (let bit = 0; bit < 8; bit++) value = (value & 1) ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
+          table[index] = value >>> 0;
+        }
+        return table;
+      })();
+
+      function pngCrc32(bytes) {
+        let crc = 0xffffffff;
+        for (let index = 0; index < bytes.length; index++) crc = PNG_CRC_TABLE[(crc ^ bytes[index]) & 0xff] ^ (crc >>> 8);
+        return (crc ^ 0xffffffff) >>> 0;
+      }
+
+      function makePngChunk(type, data) {
+        const output = new Uint8Array(data.length + 12);
+        writeUint32BE(output, 0, data.length);
+        for (let index = 0; index < 4; index++) output[4 + index] = type.charCodeAt(index);
+        output.set(data, 8);
+        writeUint32BE(output, output.length - 4, pngCrc32(output.subarray(4, output.length - 4)));
+        return output;
+      }
+
+      function parsePngChunks(bytes) {
+        const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+        if (signature.some((value, index) => bytes[index] !== value)) throw new Error('PNG 编码器输出无效');
+        const chunks = [];
+        let offset = 8;
+        while (offset < bytes.length) {
+          const length = readUint32BE(bytes, offset);
+          const end = offset + 12 + length;
+          if (end > bytes.length) throw new Error('PNG 区块长度无效');
+          let type = '';
+          for (let index = 0; index < 4; index++) type += String.fromCharCode(bytes[offset + 4 + index]);
+          chunks.push({ type, data: bytes.slice(offset + 8, offset + 8 + length) });
+          offset = end;
+          if (type === 'IEND') break;
+        }
+        return chunks;
+      }
+
+      function normalizeReferencePng(encoded) {
+        const bytes = encoded instanceof Uint8Array ? encoded : new Uint8Array(encoded);
+        const chunks = parsePngChunks(bytes);
+        const findChunk = (type) => chunks.find((chunk) => chunk.type === type);
+        const ihdr = findChunk('IHDR');
+        const palette = findChunk('PLTE');
+        const transparency = findChunk('tRNS');
+        const idat = concatBytes(chunks.filter((chunk) => chunk.type === 'IDAT').map((chunk) => chunk.data));
+        if (!ihdr || !palette || !transparency || !idat.length) {
+          throw new Error('sl.png 未生成索引色或透明色表');
+        }
+
+        const colorCount = palette.data.length / 3;
+        const alpha = new Uint8Array(colorCount);
+        alpha.fill(255);
+        alpha.set(transparency.data.subarray(0, colorCount));
+        const order = Array.from({ length: colorCount }, (_, index) => index)
+          .sort((left, right) => (alpha[left] === 255 ? 1 : 0) - (alpha[right] === 255 ? 1 : 0));
+        const remap = new Uint8Array(colorCount);
+        const sortedPalette = new Uint8Array(palette.data.length);
+        const sortedAlpha = new Uint8Array(colorCount);
+        order.forEach((oldIndex, newIndex) => {
+          remap[oldIndex] = newIndex;
+          sortedPalette.set(palette.data.subarray(oldIndex * 3, oldIndex * 3 + 3), newIndex * 3);
+          sortedAlpha[newIndex] = alpha[oldIndex];
+        });
+
+        const scanlines = window.fflate.unzlibSync(idat);
+        const rowLength = SUB_IMAGE_WIDTH + 1;
+        if (scanlines.length !== rowLength * SUB_IMAGE_HEIGHT) throw new Error('sl.png 的索引扫描线长度无效');
+        for (let y = 0; y < SUB_IMAGE_HEIGHT; y++) {
+          const rowOffset = y * rowLength;
+          if (scanlines[rowOffset] !== 0) throw new Error('sl.png 的 PNG 滤镜与原格式不一致');
+          for (let x = 1; x < rowLength; x++) scanlines[rowOffset + x] = remap[scanlines[rowOffset + x]];
+        }
+
+        let alphaLength = sortedAlpha.length;
+        while (alphaLength > 0 && sortedAlpha[alphaLength - 1] === 255) alphaLength--;
+        const gamma = new Uint8Array(4);
+        writeUint32BE(gamma, 0, PNG_GAMMA);
+        const physical = new Uint8Array(9);
+        writeUint32BE(physical, 0, PNG_PIXELS_PER_METER);
+        writeUint32BE(physical, 4, PNG_PIXELS_PER_METER);
+        physical[8] = 1;
+
+        return concatBytes([
+          new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+          makePngChunk('IHDR', ihdr.data),
+          makePngChunk('gAMA', gamma),
+          makePngChunk('sRGB', new Uint8Array([0])),
+          makePngChunk('pHYs', physical),
+          makePngChunk('PLTE', sortedPalette),
+          makePngChunk('tRNS', sortedAlpha.slice(0, alphaLength)),
+          makePngChunk('IDAT', window.fflate.zlibSync(scanlines, { level: 6 })),
+          makePngChunk('IEND', new Uint8Array(0))
+        ]);
+      }
+
+      function assertReferencePng(bytes) {
+        const chunks = parsePngChunks(bytes);
+        const expectedTypes = ['IHDR', 'gAMA', 'sRGB', 'pHYs', 'PLTE', 'tRNS', 'IDAT', 'IEND'];
+        if (chunks.length !== expectedTypes.length
+          || chunks.some((chunk, index) => chunk.type !== expectedTypes[index])) {
+          throw new Error('sl.png 的区块顺序自检失败');
+        }
+        const ihdr = chunks[0].data;
+        const gamma = chunks[1].data;
+        const physical = chunks[3].data;
+        if (readUint32BE(ihdr, 0) !== SUB_IMAGE_WIDTH || readUint32BE(ihdr, 4) !== SUB_IMAGE_HEIGHT
+          || ihdr[8] !== 8 || ihdr[9] !== 3 || ihdr[12] !== 0
+          || readUint32BE(gamma, 0) !== PNG_GAMMA
+          || readUint32BE(physical, 0) !== PNG_PIXELS_PER_METER
+          || readUint32BE(physical, 4) !== PNG_PIXELS_PER_METER || physical[8] !== 1
+          || chunks[4].data.length !== PNG_PALETTE_COLORS * 3 || chunks[5].data.length === 0) {
+          throw new Error('sl.png 的 PNG-8、调色板或 216 DPI 自检失败');
+        }
+      }
+
+      function encodeSubImage(canvas) {
+        if (!window.UPNG) throw new Error('PNG-8 严格格式编码器不可用');
+        const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+        const rgba = new Uint8Array(imageData.data);
+        const encoded = window.UPNG.encode(
+          [rgba.buffer],
+          canvas.width,
+          canvas.height,
+          PNG_PALETTE_COLORS,
+          [],
+          { sRGB: 0, pHYs: [PNG_PIXELS_PER_METER, PNG_PIXELS_PER_METER, 1] }
+        );
+        const bytes = normalizeReferencePng(encoded);
+        assertReferencePng(bytes);
+        return new Blob([bytes], { type: 'image/png' });
+      }
+
+      function readFileBytes(file) {
+        if (typeof file.arrayBuffer === 'function') {
+          return file.arrayBuffer().then((buffer) => new Uint8Array(buffer));
+        }
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(new Uint8Array(reader.result));
+          reader.onerror = () => reject(reader.error || new Error('文件读取失败'));
+          reader.readAsArrayBuffer(file);
+        });
+      }
+
+      function loadImageElement(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () => reject(new Error('Safari 无法解码这张图片'));
+            image.src = reader.result;
+          };
+          reader.onerror = () => reject(reader.error || new Error('图片读取失败'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function decodeImageFile(file) {
+        if (typeof createImageBitmap === 'function') {
+          try {
+            return await createImageBitmap(file);
+          } catch (error) {
+            // Safari has partial createImageBitmap support; HTMLImageElement is more compatible.
+          }
+        }
+        return loadImageElement(file);
+      }
+
+      function disposeSource(source) {
+        if (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap) source.close();
+      }
+
+      async function transformDeflate(bytes, mode) {
+        let nativeError;
+        const hasNativeStreams = typeof Blob.prototype.stream === 'function'
+          && typeof CompressionStream !== 'undefined'
+          && typeof DecompressionStream !== 'undefined';
+
+        if (hasNativeStreams) {
+          try {
+            const Transform = mode === 'compress' ? CompressionStream : DecompressionStream;
+            const stream = new Blob([bytes]).stream().pipeThrough(new Transform('deflate'));
+            return new Uint8Array(await new Response(stream).arrayBuffer());
+          } catch (error) {
+            nativeError = error;
+          }
+        }
+
+        if (window.fflate) {
+          return mode === 'compress'
+            ? window.fflate.zlibSync(bytes, { level: 6 })
+            : window.fflate.unzlibSync(bytes);
+        }
+        throw nativeError || new Error('当前 Safari 无法使用 zlib 压缩功能');
+      }
+
+      async function inflateThemePayload(payload) {
+        let lastError;
+        for (let trim = 0; trim <= Math.min(3, payload.length - 1); trim++) {
+          try {
+            const candidate = trim === 0 ? payload : payload.subarray(0, payload.length - trim);
+            return await transformDeflate(candidate, 'decompress');
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        throw lastError || new Error('zlib 解压失败');
+      }
+
+      async function loadTheme(file) {
+        const bytes = await readFileBytes(file);
+        if (bytes.length < HEADER_LENGTH + 2) throw new Error('文件过短，不是有效的主题包');
+
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const rawLength = view.getUint32(4, true);
+        const packedLength = view.getUint32(8, true);
+        if (rawLength !== RAW_LENGTH) throw new Error(`图片数据长度应为 ${RAW_LENGTH}，当前为 ${rawLength}`);
+        if (packedLength > bytes.length - HEADER_LENGTH || packedLength < 2) throw new Error('包头中的压缩长度无效');
+
+        const payload = bytes.subarray(HEADER_LENGTH, HEADER_LENGTH + packedLength);
+        if (payload[0] !== 0x78) throw new Error('压缩区不是有效的 zlib 数据');
+        const raw = await inflateThemePayload(payload);
+        if (raw.length !== rawLength) throw new Error(`解压得到 ${raw.length} 字节，与包头不一致`);
+
+        state.header = bytes.slice(0, HEADER_LENGTH);
+        state.originalCanvas = rawRgb565ToCanvas(raw);
+        state.source = state.originalCanvas;
+        state.fit = 'stretch';
+        state.background = '#000000';
+        elements.backgroundColor.value = state.background;
+        resetPlacement(false);
+        renderCanvas();
+
+        const headerView = new DataView(state.header.buffer, state.header.byteOffset, state.header.byteLength);
+        elements.themeFileName.textContent = file.name;
+        elements.headerValue.textContent = hex32(headerView.getUint32(0, true));
+        elements.rawSize.textContent = formatBytes(rawLength);
+        elements.packedSize.textContent = formatBytes(packedLength);
+        elements.reservedValue.textContent = hex32(headerView.getUint32(12, true));
+        elements.outputName.value = `${file.name.replace(/\.bin$/i, '') || 'theme'}_new.bin`;
+        elements.packButton.disabled = false;
+        elements.restoreButton.disabled = false;
+        elements.pngButton.disabled = false;
+        elements.mainImageButton.disabled = false;
+        elements.subImageButton.disabled = false;
+        elements.packageButton.disabled = false;
+        elements.emptyState.hidden = true;
+        elements.statusBadge.textContent = '已载入';
+        elements.statusBadge.className = 'status-badge';
+        setMessage('主题包校验通过');
+      }
+
+      async function loadReplacement(file) {
+        if (!state.header) throw new Error('请先打开主题包');
+        const bitmap = await decodeImageFile(file);
+        if (state.source !== bitmap) disposeSource(state.source);
+        state.source = bitmap;
+        state.fit = 'cover';
+        resetPlacement(false);
+        renderCanvas();
+        setMessage(`${file.name} · ${bitmap.width} × ${bitmap.height}`);
+      }
+
+      function restoreOriginal() {
+        if (!state.originalCanvas) return;
+        disposeSource(state.source);
+        state.source = state.originalCanvas;
+        state.fit = 'stretch';
+        resetPlacement(false);
+        renderCanvas();
+        setMessage('已恢复包内图片');
+      }
+
+      function downloadBlob(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = name;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      async function buildThemeBinary() {
+        if (!state.header) throw new Error('请先打开主题包');
+        const raw = canvasToRawRgb565();
+        const compressed = await transformDeflate(raw, 'compress');
+        const alignedLength = (compressed.length + 3) & ~3;
+        const output = new Uint8Array(HEADER_LENGTH + alignedLength);
+        output.set(state.header, 0);
+        output.set(compressed, HEADER_LENGTH);
+
+        const outputView = new DataView(output.buffer);
+        outputView.setUint32(4, raw.length, true);
+        outputView.setUint32(8, alignedLength, true);
+        return output;
+      }
+
+      function getThemeDefinition() {
+        let resourceBaseUrl = elements.resourceBaseUrl.value.trim();
+        if (resourceBaseUrl && !resourceBaseUrl.endsWith('/')) resourceBaseUrl += '/';
+        return {
+          mainImgUrl: `${resourceBaseUrl}main.jpg`,
+          name: elements.themeName.value.trim() || '明月',
+          nameEn: elements.themeNameEn.value.trim() || 'Moon',
+          subImgUrl: `${resourceBaseUrl}sl.png`,
+          themeCfg: elements.themeConfig.value.trim(),
+          themeData: `${resourceBaseUrl}theme.bin`
+        };
+      }
+
+      async function packTheme() {
+        const output = await buildThemeBinary();
+
+        let fileName = elements.outputName.value.trim() || 'theme_new.bin';
+        if (!fileName.toLowerCase().endsWith('.bin')) fileName += '.bin';
+        downloadBlob(new Blob([output], { type: 'application/octet-stream' }), fileName);
+        setMessage(`打包完成 · ${formatBytes(output.length)}`);
+      }
+
+      async function exportPng() {
+        const blob = await canvasToBlobCompat(elements.previewCanvas, 'image/png');
+        downloadBlob(blob, 'theme_preview.png');
+        setMessage(`PNG 已生成 · ${formatBytes(blob.size)}`);
+      }
+
+      async function exportMainImage() {
+        setMessage('正在生成严格格式 main.jpg…');
+        const blob = encodeMainImage(createMainImageCanvas());
+        downloadBlob(blob, 'main.jpg');
+        setMessage(`main.jpg 已生成 · 432 × 576 · JPEG 4:4:4 · 216 DPI · ${formatBytes(blob.size)}`);
+      }
+
+      async function exportSubImage() {
+        setMessage('正在生成严格格式 sl.png…');
+        const blob = encodeSubImage(createSubImageCanvas());
+        downloadBlob(blob, 'sl.png');
+        setMessage(`sl.png 已生成 · 1140 × 576 · PNG-8 · 216 DPI · ${formatBytes(blob.size)}`);
+      }
+
+      async function exportThemePackage() {
+        if (!window.fflate) throw new Error('完整主题打包组件不可用');
+        setMessage('正在生成完整主题…');
+        const themeBinary = await buildThemeBinary();
+        const mainBlob = encodeMainImage(createMainImageCanvas());
+        const subBlob = encodeSubImage(createSubImageCanvas());
+        const definition = getThemeDefinition();
+        const files = {
+          'theme.bin': themeBinary,
+          'main.jpg': await readFileBytes(mainBlob),
+          'sl.png': await readFileBytes(subBlob),
+          'theme.json': window.fflate.strToU8(JSON.stringify(definition, null, 2))
+        };
+        const archive = window.fflate.zipSync(files, { level: 6 });
+        const baseName = definition.nameEn.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'theme';
+        downloadBlob(new Blob([archive], { type: 'application/zip' }), `${baseName}-theme.zip`);
+        setMessage(`完整主题已生成 · ${formatBytes(archive.length)}`);
+      }
+
+      elements.themeInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        setMessage('正在解析主题包…');
+        try {
+          await loadTheme(file);
+        } catch (error) {
+          setMessage(error.message || String(error), 'error');
+          elements.statusBadge.textContent = '解析失败';
+          elements.statusBadge.className = 'status-badge is-idle';
+        } finally {
+          event.target.value = '';
+        }
+      });
+
+      elements.imageInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          await loadReplacement(file);
+        } catch (error) {
+          setMessage(error.message || String(error), 'error');
+        } finally {
+          event.target.value = '';
+        }
+      });
+
+      elements.fitButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          state.fit = button.dataset.fit;
+          resetPlacement(false);
+          renderCanvas();
+        });
+      });
+
+      elements.zoomRange.addEventListener('input', () => {
+        state.zoom = Number(elements.zoomRange.value) / 100;
+        updateControls();
+        renderCanvas();
+      });
+
+      elements.offsetXRange.addEventListener('input', () => {
+        state.offsetX = Number(elements.offsetXRange.value);
+        updateControls();
+        renderCanvas();
+      });
+
+      elements.offsetYRange.addEventListener('input', () => {
+        state.offsetY = Number(elements.offsetYRange.value);
+        updateControls();
+        renderCanvas();
+      });
+
+      elements.backgroundColor.addEventListener('input', () => {
+        state.background = elements.backgroundColor.value;
+        renderCanvas();
+      });
+
+      elements.resetPositionButton.addEventListener('click', () => resetPlacement());
+      elements.restoreButton.addEventListener('click', restoreOriginal);
+      const runExport = (action) => action().catch((error) => setMessage(error.message || String(error), 'error'));
+      elements.packButton.addEventListener('click', () => runExport(packTheme));
+      elements.pngButton.addEventListener('click', () => runExport(exportPng));
+      elements.mainImageButton.addEventListener('click', () => runExport(exportMainImage));
+      elements.subImageButton.addEventListener('click', () => runExport(exportSubImage));
+      elements.packageButton.addEventListener('click', () => runExport(exportThemePackage));
+
+      elements.previewCanvas.addEventListener('pointerdown', (event) => {
+        if (!state.source) return;
+        state.dragging = true;
+        state.dragX = event.clientX;
+        state.dragY = event.clientY;
+        state.baseOffsetX = state.offsetX;
+        state.baseOffsetY = state.offsetY;
+        elements.previewCanvas.classList.add('is-dragging');
+        if (elements.previewCanvas.setPointerCapture) elements.previewCanvas.setPointerCapture(event.pointerId);
+      });
+
+      elements.previewCanvas.addEventListener('pointermove', (event) => {
+        const rect = elements.previewCanvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(WIDTH - 1, Math.floor((event.clientX - rect.left) * WIDTH / rect.width)));
+        const y = Math.max(0, Math.min(HEIGHT - 1, Math.floor((event.clientY - rect.top) * HEIGHT / rect.height)));
+        elements.pixelPosition.textContent = `X ${x} · Y ${y}`;
+
+        if (!state.dragging) return;
+        state.offsetX = Math.max(-240, Math.min(240, state.baseOffsetX + ((event.clientX - state.dragX) * WIDTH / rect.width)));
+        state.offsetY = Math.max(-320, Math.min(320, state.baseOffsetY + ((event.clientY - state.dragY) * HEIGHT / rect.height)));
+        updateControls();
+        renderCanvas();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        elements.previewCanvas.classList.remove('is-dragging');
+        if (event && elements.previewCanvas.hasPointerCapture && elements.previewCanvas.hasPointerCapture(event.pointerId)) {
+          elements.previewCanvas.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      elements.previewCanvas.addEventListener('pointerup', endDrag);
+      elements.previewCanvas.addEventListener('pointercancel', endDrag);
+      elements.previewCanvas.addEventListener('pointerleave', () => {
+        if (!state.dragging) elements.pixelPosition.textContent = 'X 0 · Y 0';
+      });
+
+      context.fillStyle = '#000000';
+      context.fillRect(0, 0, WIDTH, HEIGHT);
+      updateControls();
+    })();
+  </script>
+</body>
+</html>
